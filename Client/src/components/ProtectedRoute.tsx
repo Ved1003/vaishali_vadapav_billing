@@ -11,14 +11,7 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
-        <div className="flex flex-col items-center gap-4">
-          <div className="h-12 w-12 rounded-full border-4 border-orange-200 border-t-orange-600 animate-spin" />
-          <p className="text-[10px] font-black text-orange-600 uppercase tracking-widest">Verifying Access...</p>
-        </div>
-      </div>
-    );
+    return null; // Don't show anything during the very first tiny chunk of loading
   }
 
   if (!user) {

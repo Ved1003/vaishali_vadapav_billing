@@ -18,6 +18,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Clock,
+  ChefHat,
 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { cn } from '@/lib/utils';
@@ -112,7 +113,7 @@ export function AdminLayout() {
               className="flex items-center gap-2.5"
             >
               <div className="h-8 w-8 rounded-lg bg-orange-600 flex items-center justify-center shadow-lg shadow-orange-500/20">
-                <Store className="h-4 w-4 text-white" />
+                <ChefHat className="h-4 w-4 text-white" />
               </div>
               <div className="flex flex-col">
                 <span className="text-sm font-black text-slate-900 dark:text-white leading-none tracking-tight uppercase">Vaishali</span>
@@ -122,7 +123,7 @@ export function AdminLayout() {
           )}
           {isCollapsed && (
             <div className="h-8 w-8 rounded-lg bg-orange-600 flex items-center justify-center shadow-md">
-              <Store className="h-4 w-4 text-white" />
+              <ChefHat className="h-4 w-4 text-white" />
             </div>
           )}
           {!isCollapsed && (

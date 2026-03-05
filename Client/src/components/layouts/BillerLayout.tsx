@@ -1,7 +1,7 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { LogOut, Receipt, Store, Sparkles, User as UserIcon, Clock } from 'lucide-react';
+import { LogOut, Receipt, Store, Sparkles, User as UserIcon, Clock, ChefHat } from 'lucide-react';
 import { ModeToggle } from '@/components/mode-toggle';
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
@@ -32,7 +32,7 @@ export function BillerLayout() {
               whileHover={{ rotate: 5 }}
               className="h-11 w-11 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center shadow-lg shadow-orange-500/20"
             >
-              <Store className="h-5 w-5 text-white" />
+              <ChefHat className="h-5 w-5 text-white" />
             </motion.div>
             <div className="hidden sm:block">
               <h1 className="text-lg font-black text-slate-800 dark:text-white leading-tight tracking-tight uppercase">Vaishali Snacks</h1>

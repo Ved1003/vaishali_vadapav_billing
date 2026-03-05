@@ -179,7 +179,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const storedUser: AuthUser = JSON.parse(stored);
 
         // Optimistically set user from localStorage to prevent flash of login redirect
-        if (isMounted) setUser(storedUser);
+        if (isMounted) {
+          setUser(storedUser);
+          setIsLoading(false); // OPTIMISTIC: Let the app render immediately
+        }
 
         // Verify token in background
         const verifiedUser = await verifyTokenApi();
@@ -202,10 +205,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } catch (error) {
         console.error('Initialization error:', error);
-        if (isMounted) await logout();
+        if (isMounted) {
+          await logout();
+          setIsLoading(false);
+        }
       } finally {
         if (isMounted) {
-          setIsLoading(false);
           setupTokenRefresh();
         }
       }
