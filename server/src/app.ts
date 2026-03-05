@@ -39,7 +39,7 @@ app.use(helmet());
 // ───────────────────────────────────────────────
 const isDev = process.env.NODE_ENV !== 'production';
 
-const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:8080,http://localhost:5173')
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:8080,http://localhost:5173,capacitor://localhost,http://localhost')
     .split(',')
     .map(o => o.trim());
 
@@ -51,8 +51,9 @@ const corsOptions: cors.CorsOptions = {
         // Allow requests with no origin (Capacitor native apps, curl, Postman)
         if (!origin) return callback(null, true);
 
-        // Production: strict whitelist
-        if (allowedOrigins.includes(origin)) {
+        // Allow local/mobile origins in addition to the whitelist
+        const defaultAllowed = ['capacitor://localhost', 'http://localhost', 'http://localhost:8080', 'http://localhost:5173'];
+        if (defaultAllowed.includes(origin) || allowedOrigins.includes(origin)) {
             return callback(null, true);
         }
 
