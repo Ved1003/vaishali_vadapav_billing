@@ -92,13 +92,7 @@ export default function LoginPage() {
           description: 'Login successful, taking you to your dashboard.',
         });
 
-        setTimeout(() => {
-          const authUser = localStorage.getItem('authUser');
-          if (authUser) {
-            const parsedUser = JSON.parse(authUser);
-            navigate(parsedUser.role === 'ADMIN' ? '/admin' : '/billing', { replace: true });
-          }
-        }, 100);
+        // Post-login redirect is handled by the useEffect watching the 'user' state
       } else {
         toast({
           title: 'Authentication Failed',

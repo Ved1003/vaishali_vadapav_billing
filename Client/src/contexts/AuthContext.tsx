@@ -56,25 +56,60 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isRefreshingRef = useRef(false);
 
   /**
+   * Helper to get stored auth data from either localStorage or sessionStorage
+   */
+  const getStoredAuth = (): AuthUser | null => {
+    const local = localStorage.getItem(AUTH_STORAGE_KEY);
+    const session = sessionStorage.getItem(AUTH_STORAGE_KEY);
+
+    try {
+      if (local) return JSON.parse(local);
+      if (session) return JSON.parse(session);
+    } catch (e) {
+      console.error('Error parsing stored auth:', e);
+    }
+    return null;
+  };
+
+  /**
+   * Helper to set auth data based on role
+   */
+  const setStoredAuth = (userData: AuthUser) => {
+    const data = JSON.stringify(userData);
+    if (userData.role === 'BILLER') {
+      sessionStorage.setItem(AUTH_STORAGE_KEY, data);
+      localStorage.removeItem(AUTH_STORAGE_KEY); // Clean up any stale local data
+    } else {
+      localStorage.setItem(AUTH_STORAGE_KEY, data);
+      sessionStorage.removeItem(AUTH_STORAGE_KEY); // Clean up any stale session data
+    }
+  };
+
+  /**
+   * Helper to clear auth from both storages
+   */
+  const clearStoredAuth = () => {
+    localStorage.removeItem(AUTH_STORAGE_KEY);
+    sessionStorage.removeItem(AUTH_STORAGE_KEY);
+  };
+
+  /**
    * Refresh access token using refresh token
    */
   const refreshAccessToken = async (): Promise<boolean> => {
     if (isRefreshingRef.current) return false;
 
-    const stored = localStorage.getItem(AUTH_STORAGE_KEY);
-    if (!stored) return false;
+    const storedUser = getStoredAuth();
+    if (!storedUser?.refreshToken) return false;
 
     try {
-      const storedUser: AuthUser = JSON.parse(stored);
-      if (!storedUser.refreshToken) return false;
-
       isRefreshingRef.current = true;
       const newToken = await refreshTokenApi(storedUser.refreshToken);
 
       if (newToken) {
         const updatedUser = { ...storedUser, token: newToken };
         setUser(updatedUser);
-        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updatedUser));
+        setStoredAuth(updatedUser);
         return true;
       }
 
@@ -94,15 +129,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    * Verify current token and refresh if needed
    */
   const verifyAndRefreshToken = async (): Promise<void> => {
-    const stored = localStorage.getItem(AUTH_STORAGE_KEY);
-    if (!stored) {
+    const storedUser = getStoredAuth();
+    if (!storedUser) {
       setIsLoading(false);
       return;
     }
 
     try {
-      const storedUser: AuthUser = JSON.parse(stored);
-
       // Check if token is expiring
       if (storedUser.token && isTokenExpiring(storedUser.token)) {
         // Try to refresh token
@@ -116,7 +149,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Verify token with server
       const verifiedUser = await verifyTokenApi();
       if (verifiedUser) {
-        setUser(verifiedUser);
+        setUser({ ...storedUser, ...verifiedUser });
       } else {
         // Token invalid, try refresh
         if (storedUser.refreshToken) {
@@ -131,7 +164,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Token verification error:', error);
       setUser(null);
-      localStorage.removeItem(AUTH_STORAGE_KEY);
+      clearStoredAuth();
     } finally {
       setIsLoading(false);
     }
@@ -148,11 +181,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Set up new interval to check and refresh token
     refreshIntervalRef.current = setInterval(async () => {
-      const stored = localStorage.getItem(AUTH_STORAGE_KEY);
-      if (!stored) return;
+      const storedUser = getStoredAuth();
+      if (!storedUser) return;
 
       try {
-        const storedUser: AuthUser = JSON.parse(stored);
         if (storedUser.token && isTokenExpiring(storedUser.token)) {
           await refreshAccessToken();
         }
@@ -169,16 +201,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let isMounted = true;
 
     const initialize = async () => {
-      const stored = localStorage.getItem(AUTH_STORAGE_KEY);
-      if (!stored) {
+      const storedUser = getStoredAuth();
+      if (!storedUser) {
         if (isMounted) setIsLoading(false);
         return;
       }
 
       try {
-        const storedUser: AuthUser = JSON.parse(stored);
-
-        // Optimistically set user from localStorage to prevent flash of login redirect
+        // Optimistically set user from storage to prevent flash of login redirect
         if (isMounted) {
           setUser(storedUser);
           setIsLoading(false); // OPTIMISTIC: Let the app render immediately
@@ -191,7 +221,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // If server returns fresh data, merge it with existing tokens
           const updatedUser = { ...storedUser, ...verifiedUser };
           setUser(updatedUser);
-          localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updatedUser));
+          setStoredAuth(updatedUser);
         } else if (!verifiedUser && isMounted) {
           // Token invalid, try refresh quietly
           if (storedUser.refreshToken) {
@@ -251,7 +281,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const authUser = await loginApi(username, password);
       if (authUser) {
         setUser(authUser);
-        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authUser));
+        setStoredAuth(authUser);
         setupTokenRefresh(); // Restart refresh interval
         return { success: true };
       }
@@ -271,7 +301,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('Logout API error:', error);
     } finally {
       setUser(null);
-      localStorage.removeItem(AUTH_STORAGE_KEY);
+      clearStoredAuth();
 
       // Clear refresh interval
       if (refreshIntervalRef.current) {

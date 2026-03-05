@@ -10,9 +10,12 @@ import { User, AuthUser, Item, Bill, DashboardStats, BillerRevenue, DailyRevenue
 // API Base URL – set via environment variable in .env.production
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
-// Helper function to get auth token from localStorage
+// Helper function to get auth token from either storage
 const getAuthToken = (): string | null => {
-  const authUser = localStorage.getItem('authUser');
+  const local = localStorage.getItem('authUser');
+  const session = sessionStorage.getItem('authUser');
+  const authUser = local || session;
+
   if (authUser) {
     try {
       const user = JSON.parse(authUser);
@@ -64,35 +67,19 @@ const apiCall = async <T>(
 // ============ AUTH API ============
 export const loginApi = async (username: string, password: string): Promise<AuthUser | null> => {
   try {
-    const data = await apiCall<AuthUser>('/auth/login', {
+    return apiCall<AuthUser>('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ username, password }),
     });
-
-    // Store user data with tokens in localStorage
-    localStorage.setItem('authUser', JSON.stringify(data));
-
-    return data;
   } catch (error: any) {
     console.error('Login error:', error);
-    throw error; // Re-throw to allow better error handling in AuthContext
+    throw error;
   }
 };
 
 export const verifyTokenApi = async (): Promise<AuthUser | null> => {
   try {
-    const data = await apiCall<AuthUser>('/auth/verify');
-
-    // Update stored user data (excluding tokens)
-    const stored = localStorage.getItem('authUser');
-    if (stored) {
-      const storedUser = JSON.parse(stored);
-      const updatedUser = { ...storedUser, ...data };
-      localStorage.setItem('authUser', JSON.stringify(updatedUser));
-      return updatedUser;
-    }
-
-    return data;
+    return apiCall<AuthUser>('/auth/verify');
   } catch (error: any) {
     console.error('Token verification error:', error);
     return null;
