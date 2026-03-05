@@ -61,6 +61,7 @@ const App = () => {
                     </ProtectedRoute>
                   }>
                     <Route index element={<AdminDashboard />} />
+                    <Route path="dashboard" element={<Navigate to="/admin" replace />} />
                     <Route path="items" element={<ManageItems />} />
                     <Route path="users" element={<ManageUsers />} />
                     <Route path="history" element={<BillingHistory />} />
@@ -74,6 +75,7 @@ const App = () => {
                     </ProtectedRoute>
                   }>
                     <Route index element={<BillingScreen />} />
+                    <Route path="dashboard" element={<Navigate to="/billing" replace />} />
                   </Route>
 
                   <Route path="*" element={<NotFound />} />

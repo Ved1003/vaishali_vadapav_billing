@@ -15,7 +15,6 @@ export const useSocket = (events: { [key: string]: (data: any) => void }) => {
     useEffect(() => {
         // Initialize socket connection
         const socket = io(SOCKET_URL, {
-            transports: ['websocket'],
             reconnectionAttempts: 5,
         });
 

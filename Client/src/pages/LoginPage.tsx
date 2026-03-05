@@ -184,8 +184,8 @@ export default function LoginPage() {
                 whileHover={{ scale: 1.05 }}
                 className="inline-flex items-center gap-3 mb-6"
               >
-                <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center shadow-2xl shadow-orange-500/50 rotate-3">
-                  <ShoppingCart className="h-8 w-8 text-white" />
+                <div className="h-16 w-16 rounded-2xl bg-white flex items-center justify-center shadow-2xl shadow-orange-500/50 rotate-3 overflow-hidden">
+                  <img src="/logo.png" alt="Logo" className="w-12 h-12 object-contain" />
                 </div>
                 <div>
                   <h1 className="text-5xl font-black bg-gradient-to-r from-orange-600 via-amber-600 to-orange-500 bg-clip-text text-transparent">
@@ -199,7 +199,7 @@ export default function LoginPage() {
                 Welcome to Your
                 <br />
                 <span className="bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
-                  Smart Billing System
+                  Vaishali Snack Center
                 </span>
               </h2>
 
@@ -239,8 +239,8 @@ export default function LoginPage() {
           >
             {/* Mobile Header */}
             <div className="lg:hidden flex flex-col items-center mb-8">
-              <div className="h-20 w-20 rounded-3xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center shadow-2xl shadow-orange-500/50 mb-4 rotate-3">
-                <ShoppingCart className="h-10 w-10 text-white" />
+              <div className="h-20 w-20 rounded-3xl bg-white flex items-center justify-center shadow-2xl shadow-orange-500/50 mb-4 rotate-3 overflow-hidden">
+                <img src="/logo.png" alt="Logo" className="w-16 h-16 object-contain" />
               </div>
               <h1 className="text-4xl font-black bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent text-center">
                 Vaishali Snacks
