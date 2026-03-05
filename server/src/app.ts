@@ -18,6 +18,11 @@ dotenv.config();
 const app: Application = express();
 
 // ───────────────────────────────────────────────
+// Trust Proxy (Required for Railway/Heroku Load Balancers)
+// ───────────────────────────────────────────────
+app.set('trust proxy', 1);
+
+// ───────────────────────────────────────────────
 // Compression (gzip/brotli – reduces payload size)
 // ───────────────────────────────────────────────
 app.use(compression());
