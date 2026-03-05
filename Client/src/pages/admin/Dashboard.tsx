@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -6,7 +7,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
-import { getDashboardStatsApi, getBillerRevenueApi, getDailyRevenueApi, getBillsApi, downloadSalesReportApi, getUsersApi } from '@/services/api';
+import {
+  getDashboardOverviewApi,
+  getBillsApi,
+  downloadSalesReportApi,
+  getUsersApi
+} from '@/services/api';
 import { DashboardStats, BillerRevenue, DailyRevenue, Bill, User } from '@/types';
 import { StatCardSkeleton, ChartSkeleton } from '@/components/ui/SkeletonCards';
 import {
@@ -28,6 +34,7 @@ import {
   Clock,
   CreditCard,
   Banknote,
+  ChefHat,
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Area, AreaChart } from 'recharts';
 import { useSocket } from '@/hooks/useSocket';
@@ -38,137 +45,75 @@ import { cn } from '@/lib/utils';
 type TimePeriod = 'today' | 'monthly' | 'yearly' | 'custom';
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [previousStats, setPreviousStats] = useState<DashboardStats | null>(null);
-  const [billerRevenue, setBillerRevenue] = useState<BillerRevenue[]>([]);
-  const [dailyRevenue, setDailyRevenue] = useState<DailyRevenue[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const [statsPeriod, setStatsPeriod] = useState<TimePeriod>('monthly');
-  const [chartDays, setChartDays] = useState(7);
   const [billerPeriod, setBillerPeriod] = useState<TimePeriod>('monthly');
+  const [chartDays, setChartDays] = useState(7);
   const [chartType, setChartType] = useState<'bar' | 'line'>('bar');
 
   const [selectedBiller, setSelectedBiller] = useState<BillerRevenue | null>(null);
   const [billerBills, setBillerBills] = useState<Bill[]>([]);
   const [billerBillsPage, setBillerBillsPage] = useState(1);
   const [isLoadingBillerBills, setIsLoadingBillerBills] = useState(false);
-  const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
 
   const [reportStartDate, setReportStartDate] = useState('');
   const [reportEndDate, setReportEndDate] = useState('');
   const [isDownloadingReport, setIsDownloadingReport] = useState(false);
-  const [recentBills, setRecentBills] = useState<Bill[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
-  const { toast } = useToast();
+
+  // ── Consolidated Dashboard Data ──────────────────────────────
+  const {
+    data: overview,
+    isLoading: isOverviewLoading,
+    isRefetching: isOverviewRefetching,
+    dataUpdatedAt: lastRefreshedTime
+  } = useQuery({
+    queryKey: ['dashboard-overview', statsPeriod, billerPeriod, chartDays],
+    queryFn: () => getDashboardOverviewApi({ statsPeriod, billerPeriod, chartDays }),
+    staleTime: 30000, // 30 seconds fresh
+  });
+
+  // ── Users Data ──────────────────────────────────────────────
+  const { data: users = [] } = useQuery({
+    queryKey: ['users'],
+    queryFn: getUsersApi,
+  });
+
+  // ── Recent Bills ───────────────────────────────────────────
+  const { data: recentBills = [] } = useQuery({
+    queryKey: ['recent-bills'],
+    queryFn: () => getBillsApi({ limit: 6 }),
+  });
+
+  const stats = overview?.stats || null;
+  const billerRevenue = overview?.billerRevenue || [];
+  const dailyRevenue = overview?.dailyRevenue || [];
+  const isLoading = isOverviewLoading;
+  const isRefreshing = isOverviewRefetching;
 
   useSocket({
     'BILL_CREATED': (newBill: Bill) => {
-      setRecentBills(prev => [newBill, ...prev].slice(0, 6));
-      setStats(prev => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          todaySales: prev.todaySales + newBill.totalAmount,
-          todayBillCount: prev.todayBillCount + 1,
-          monthlySales: prev.monthlySales + newBill.totalAmount,
-          monthlyBillCount: prev.monthlyBillCount + 1,
-          periodSales: prev.periodSales !== undefined ? prev.periodSales + newBill.totalAmount : undefined,
-          periodBillCount: prev.periodBillCount !== undefined ? prev.periodBillCount + 1 : undefined,
-        };
-      });
+      // Invalidate dashboard and bills to trigger background refresh
+      queryClient.invalidateQueries({ queryKey: ['dashboard-overview'] });
+      queryClient.invalidateQueries({ queryKey: ['recent-bills'] });
+
       toast({
         title: "New Sale!",
         description: `Bill #${newBill.billNumber} — ₹${newBill.totalAmount} by ${newBill.billerName}`,
       });
     },
-    'USER_STATUS_CHANGE': (updatedUser: User) => {
-      setUsers(prev => prev.map(u => u.id === updatedUser.id ? updatedUser : u));
+    'USER_STATUS_CHANGE': () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-overview'] });
     }
   });
 
-  useEffect(() => {
-    const loadInitialData = async () => {
-      try {
-        const [bills, usersData] = await Promise.all([
-          getBillsApi({ limit: 6 }),
-          getUsersApi()
-        ]);
-        setRecentBills(bills);
-        setUsers(usersData);
-      } catch (error) {
-        console.error("Failed to load initial dashboard data:", error);
-      }
-    };
-    loadInitialData();
-  }, []);
-
-  useEffect(() => {
-    let isMounted = true;
-    const loadStats = async () => {
-      try {
-        const data = await getDashboardStatsApi(statsPeriod);
-        if (isMounted) {
-          setStats(prev => { if (prev) setPreviousStats(prev); return data; });
-          setLastRefreshed(new Date());
-          setIsLoading(false);
-        }
-      } catch (error) {
-        console.error("Failed to fetch stats:", error);
-      }
-    };
-    loadStats();
-    return () => { isMounted = false; };
-  }, [statsPeriod]);
-
-  useEffect(() => {
-    let isMounted = true;
-    const loadDailyRevenue = async () => {
-      try {
-        const data = await getDailyRevenueApi(chartDays);
-        if (isMounted) setDailyRevenue(data);
-      } catch (error) {
-        console.error("Failed to fetch daily revenue:", error);
-      }
-    };
-    loadDailyRevenue();
-    return () => { isMounted = false; };
-  }, [chartDays]);
-
-  useEffect(() => {
-    let isMounted = true;
-    const loadBillerRevenue = async () => {
-      try {
-        const data = await getBillerRevenueApi(billerPeriod);
-        if (isMounted) setBillerRevenue(data);
-      } catch (error) {
-        console.error("Failed to fetch biller revenue:", error);
-      }
-    };
-    loadBillerRevenue();
-    return () => { isMounted = false; };
-  }, [billerPeriod]);
-
-  const refreshAll = useCallback(async () => {
-    setIsRefreshing(true);
-    try {
-      const [statsData, dailyData, billerData] = await Promise.all([
-        getDashboardStatsApi(statsPeriod),
-        getDailyRevenueApi(chartDays),
-        getBillerRevenueApi(billerPeriod)
-      ]);
-      setStats(prev => { if (prev) setPreviousStats(prev); return statsData; });
-      setDailyRevenue(dailyData);
-      setBillerRevenue(billerData);
-      setLastRefreshed(new Date());
-    } catch (error) {
-      console.error("Failed to refresh dashboard:", error);
-    } finally {
-      setIsRefreshing(false);
-      setIsLoading(false);
-    }
-  }, [statsPeriod, chartDays, billerPeriod]);
+  const refreshAll = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['dashboard-overview'] });
+    queryClient.invalidateQueries({ queryKey: ['recent-bills'] });
+    queryClient.invalidateQueries({ queryKey: ['users'] });
+  }, [queryClient]);
 
   const calculateTrend = (current: number, previous: number): { value: number; isPositive: boolean } => {
     if (previous === 0) return { value: 0, isPositive: true };
@@ -177,7 +122,7 @@ export default function AdminDashboard() {
   };
 
   const getPreviousValue = (currentValue: number, _period: TimePeriod): number => {
-    return currentValue * 0.85;
+    return currentValue * 0.85; // Placeholder logic
   };
 
   const handleBillerClick = async (biller: BillerRevenue) => {
@@ -267,7 +212,7 @@ export default function AdminDashboard() {
           <div>
             <h1 className="text-xl font-bold text-slate-800 dark:text-white tracking-tight">Dashboard</h1>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Last updated: {lastRefreshed.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+              Last updated: {lastRefreshedTime ? new Date(lastRefreshedTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '...'}
             </p>
           </div>
 

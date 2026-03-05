@@ -279,3 +279,93 @@ export const getYearlyReport = async (req: Request, res: Response): Promise<void
         res.status(500).json({ error: 'Failed to fetch yearly report' });
     }
 };
+export const getDashboardOverview = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const statsPeriod = (req.query.statsPeriod as string) || 'monthly';
+        const billerPeriod = (req.query.billerPeriod as string) || 'monthly';
+        const chartDays = parseInt(req.query.chartDays as string) || 7;
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // 1. Get Stats (Internal Logic Reuse)
+        let statsStartDate: Date;
+        switch (statsPeriod) {
+            case 'today': statsStartDate = today; break;
+            case 'yearly': statsStartDate = new Date(today.getFullYear(), 0, 1); break;
+            case 'monthly':
+            default: statsStartDate = new Date(today.getFullYear(), today.getMonth(), 1); break;
+        }
+
+        const [periodStats, todayStats, monthlyStats] = await Promise.all([
+            Bill.aggregate([
+                { $match: { createdAt: { $gte: statsStartDate } } },
+                { $group: { _id: null, totalSales: { $sum: '$totalAmount' }, totalBillCount: { $sum: 1 } } }
+            ]),
+            Bill.aggregate([
+                { $match: { createdAt: { $gte: today } } },
+                { $group: { _id: null, todaySales: { $sum: '$totalAmount' }, todayBillCount: { $sum: 1 } } }
+            ]),
+            Bill.aggregate([
+                { $match: { createdAt: { $gte: new Date(today.getFullYear(), today.getMonth(), 1) } } },
+                { $group: { _id: null, monthlySales: { $sum: '$totalAmount' }, monthlyBillCount: { $sum: 1 } } }
+            ])
+        ]);
+
+        const stats = {
+            todaySales: todayStats[0]?.todaySales || 0,
+            todayBillCount: todayStats[0]?.todayBillCount || 0,
+            monthlySales: monthlyStats[0]?.monthlySales || 0,
+            monthlyBillCount: monthlyStats[0]?.monthlyBillCount || 0,
+            periodSales: periodStats[0]?.totalSales || 0,
+            periodBillCount: periodStats[0]?.totalBillCount || 0,
+            period: statsPeriod,
+        };
+
+        // 2. Get Biller Revenue
+        let billerStartDate: Date;
+        switch (billerPeriod) {
+            case 'today': billerStartDate = today; break;
+            case 'yearly': billerStartDate = new Date(today.getFullYear(), 0, 1); break;
+            case 'monthly':
+            default: billerStartDate = new Date(today.getFullYear(), today.getMonth(), 1); break;
+        }
+
+        const billerRevenue = await Bill.aggregate([
+            { $match: { createdAt: { $gte: billerStartDate } } },
+            { $group: { _id: '$billerId', billerName: { $first: '$billerName' }, totalRevenue: { $sum: '$totalAmount' }, billCount: { $sum: 1 } } },
+            { $lookup: { from: 'users', let: { billerId: { $toObjectId: '$_id' } }, pipeline: [{ $match: { $expr: { $eq: ['$_id', '$$billerId'] } } }, { $project: { status: 1 } }], as: 'userInfo' } },
+            { $match: { 'userInfo.status': 'active' } },
+            { $project: { _id: 0, billerId: '$_id', billerName: 1, totalRevenue: 1, billCount: 1 } },
+            { $sort: { totalRevenue: -1 } }
+        ]);
+
+        // 3. Get Daily Revenue
+        const chartStartDate = new Date();
+        chartStartDate.setDate(chartStartDate.getDate() - chartDays + 1);
+        chartStartDate.setHours(0, 0, 0, 0);
+
+        const dailyRaw = await Bill.aggregate([
+            { $match: { createdAt: { $gte: chartStartDate } } },
+            { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }, revenue: { $sum: '$totalAmount' } } },
+            { $sort: { _id: 1 } }
+        ]);
+
+        const dailyRevenue = [];
+        for (let i = 0; i < chartDays; i++) {
+            const date = new Date(chartStartDate);
+            date.setDate(date.getDate() + i);
+            const dateStr = date.toISOString().split('T')[0];
+            const dayData = dailyRaw.find(d => d._id === dateStr);
+            dailyRevenue.push({
+                date: date.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric' }),
+                revenue: dayData?.revenue || 0,
+            });
+        }
+
+        res.json({ stats, billerRevenue, dailyRevenue });
+    } catch (error) {
+        console.error('Dashboard overview error:', error);
+        res.status(500).json({ error: 'Failed to fetch dashboard overview' });
+    }
+};

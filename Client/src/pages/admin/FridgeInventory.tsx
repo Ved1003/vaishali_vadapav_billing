@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,8 +35,9 @@ import { cn } from '@/lib/utils';
 import { useSocket } from '@/hooks/useSocket';
 
 export default function FridgeInventory() {
-    const [items, setItems] = useState<FridgeItem[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const queryClient = useQueryClient();
+    const { toast } = useToast();
+
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isRestockOpen, setIsRestockOpen] = useState(false);
     const [editingItem, setEditingItem] = useState<FridgeItem | null>(null);
@@ -46,35 +48,47 @@ export default function FridgeInventory() {
     const [view, setView] = useState<'active' | 'archived'>('active');
     const [sortBy, setSortBy] = useState<'name' | 'stock' | 'price'>('name');
 
-    const { toast } = useToast();
+    // ── Queries ────────────────────────────────────────────────
+    const { data: items = [], isLoading } = useQuery({
+        queryKey: ['fridge-items'],
+        queryFn: getFridgeItemsApi,
+        staleTime: 30000,
+    });
 
-    // Correct useSocket implementation
-    useSocket({
-        'fridge_update': (updatedItem: FridgeItem) => {
-            setItems(prev => prev.map(item => item.id === updatedItem.id ? updatedItem : item));
-        },
-        'fridge_create': (newItem: FridgeItem) => {
-            setItems(prev => [...prev, newItem]);
-        },
-        'fridge_delete': (deletedId: string) => {
-            setItems(prev => prev.filter(item => item.id !== deletedId));
+    // ── Mutations ──────────────────────────────────────────────
+    const createMutation = useMutation({
+        mutationFn: createFridgeItemApi,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['fridge-items'] });
+            toast({ title: 'Success', description: 'Item added successfully' });
+            setIsDialogOpen(false);
         }
     });
 
-    useEffect(() => {
-        fetchItems();
-    }, []);
-
-    const fetchItems = async () => {
-        try {
-            const data = await getFridgeItemsApi();
-            setItems(data);
-        } catch {
-            toast({ title: 'Error', description: 'Failed to fetch inventory', variant: 'destructive' });
-        } finally {
-            setIsLoading(false);
+    const updateMutation = useMutation({
+        mutationFn: ({ id, item }: { id: string, item: Partial<FridgeItem> }) => updateFridgeItemApi(id, item),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['fridge-items'] });
+            toast({ title: 'Success', description: 'Item updated successfully' });
+            setIsDialogOpen(false);
         }
-    };
+    });
+
+    const restockMutation = useMutation({
+        mutationFn: ({ id, amount }: { id: string, amount: number }) => restockFridgeItemApi(id, amount),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['fridge-items'] });
+            toast({ title: 'Success', description: 'Stock updated' });
+            setIsRestockOpen(false);
+        }
+    });
+
+    // Correct useSocket implementation with invalidation
+    useSocket({
+        'fridge_update': () => queryClient.invalidateQueries({ queryKey: ['fridge-items'] }),
+        'fridge_create': () => queryClient.invalidateQueries({ queryKey: ['fridge-items'] }),
+        'fridge_delete': () => queryClient.invalidateQueries({ queryKey: ['fridge-items'] })
+    });
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -85,44 +99,26 @@ export default function FridgeInventory() {
             isActive: true
         };
 
-        try {
-            if (editingItem) {
-                await updateFridgeItemApi(editingItem.id, data);
-                toast({ title: 'Success', description: 'Item updated successfully' });
-            } else {
-                await createFridgeItemApi(data);
-                toast({ title: 'Success', description: 'Item added successfully' });
-            }
-            setIsDialogOpen(false);
-        } catch {
-            toast({ title: 'Error', description: 'Failed to save item', variant: 'destructive' });
+        if (editingItem) {
+            updateMutation.mutate({ id: editingItem.id, item: data });
+        } else {
+            createMutation.mutate(data);
         }
     };
 
     const handleRestock = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!restockItem) return;
-
-        try {
-            await restockFridgeItemApi(restockItem.id, parseInt(restockAmount));
-            toast({ title: 'Success', description: `Added ${restockAmount} units to ${restockItem.name}` });
-            setIsRestockOpen(false);
-            setRestockAmount('');
-        } catch {
-            toast({ title: 'Error', description: 'Failed to restock item', variant: 'destructive' });
-        }
+        if (!restockItem || !restockAmount) return;
+        restockMutation.mutate({ id: restockItem.id, amount: parseInt(restockAmount) });
+        setRestockAmount('');
     };
 
     const toggleArchive = async (item: FridgeItem) => {
-        try {
-            await updateFridgeItemApi(item.id, { isActive: !item.isActive });
-            toast({
-                title: item.isActive ? 'Archived' : 'Restored',
-                description: `${item.name} has been ${item.isActive ? 'archived' : 'restored'}`
-            });
-        } catch {
-            toast({ title: 'Error', description: 'Action failed', variant: 'destructive' });
-        }
+        updateMutation.mutate({ id: item.id, item: { isActive: !item.isActive } });
+        toast({
+            title: item.isActive ? 'Archived' : 'Restored',
+            description: `${item.name} has been ${item.isActive ? 'archived' : 'restored'}`
+        });
     };
 
     const sortedItems = useMemo(() => {
@@ -174,7 +170,7 @@ export default function FridgeInventory() {
                 <div className="flex items-center gap-2">
                     <Button
                         variant="outline"
-                        onClick={fetchItems}
+                        onClick={() => queryClient.invalidateQueries({ queryKey: ['fridge-items'] })}
                         className="rounded-xl border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 h-10 w-10 p-0"
                     >
                         <RefreshCw className="h-4 w-4" />

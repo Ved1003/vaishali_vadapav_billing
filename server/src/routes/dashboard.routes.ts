@@ -3,6 +3,7 @@ import {
     getDashboardStats,
     getBillerRevenue,
     getDailyRevenue,
+    getDashboardOverview,
     getQuarterlyReport,
     getYearlyReport,
 } from '../controllers/dashboard.controller';
@@ -12,6 +13,9 @@ const router = Router();
 
 // All dashboard routes require admin authentication
 router.use(authenticate, authorize('ADMIN'));
+
+// GET /api/dashboard/overview - Consolidated stats, biller revenue, and daily revenue
+router.get('/overview', getDashboardOverview);
 
 // GET /api/dashboard/stats - Today and monthly stats
 router.get('/stats', getDashboardStats);

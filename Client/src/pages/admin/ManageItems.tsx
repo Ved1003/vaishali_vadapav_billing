@@ -1,4 +1,5 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,8 +34,9 @@ type SortOption = 'name-asc' | 'name-desc' | 'price-asc' | 'price-desc';
 type FilterOption = 'all' | 'active' | 'inactive';
 
 export default function ManageItems() {
-  const [items, setItems] = useState<Item[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
   const [formData, setFormData] = useState({ name: '', price: '' });
@@ -42,20 +44,40 @@ export default function ManageItems() {
   const [statusFilter, setStatusFilter] = useState<FilterOption>('all');
   const [sortOption, setSortOption] = useState<SortOption>('name-asc');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const { toast } = useToast();
 
-  useEffect(() => {
-    fetchItems();
-  }, []);
+  // ── Queries ────────────────────────────────────────────────
+  const { data: items = [], isLoading } = useQuery({
+    queryKey: ['items'],
+    queryFn: getItemsApi,
+    staleTime: 60000,
+  });
 
-  const fetchItems = async () => {
-    try {
-      const data = await getItemsApi();
-      setItems(data);
-    } finally {
-      setIsLoading(false);
+  // ── Mutations ──────────────────────────────────────────────
+  const createMutation = useMutation({
+    mutationFn: createItemApi,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['items'] });
+      toast({ title: 'Item added successfully' });
+      setIsDialogOpen(false);
     }
-  };
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, item }: { id: string, item: Partial<Item> }) => updateItemApi(id, item),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['items'] });
+      toast({ title: 'Item updated successfully' });
+      setIsDialogOpen(false);
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteItemApi,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['items'] });
+      toast({ title: 'Item deleted successfully' });
+    }
+  });
 
   const openAddDialog = () => {
     setEditingItem(null);
@@ -84,25 +106,10 @@ export default function ManageItems() {
       return;
     }
 
-    try {
-      if (editingItem) {
-        const updated = await updateItemApi(editingItem.id, { name, price });
-        if (updated) {
-          setItems(items.map(i => i.id === editingItem.id ? updated : i));
-          toast({ title: 'Item updated successfully' });
-        }
-      } else {
-        const newItem = await createItemApi({ name, price, isActive: true });
-        setItems([...items, newItem]);
-        toast({ title: 'Item added successfully' });
-      }
-      setIsDialogOpen(false);
-    } catch {
-      toast({
-        title: 'Error',
-        description: 'Failed to save item',
-        variant: 'destructive',
-      });
+    if (editingItem) {
+      updateMutation.mutate({ id: editingItem.id, item: { name, price } });
+    } else {
+      createMutation.mutate({ name, price, isActive: true });
     }
   };
 
@@ -110,7 +117,7 @@ export default function ManageItems() {
     try {
       const updated = await updateItemApi(item.id, { isActive: !item.isActive });
       if (updated) {
-        setItems(items.map(i => i.id === item.id ? updated : i));
+        queryClient.invalidateQueries({ queryKey: ['items'] });
         toast({
           title: `Item ${updated.isActive ? 'activated' : 'deactivated'}`,
           description: `${item.name} is now ${updated.isActive ? 'active' : 'inactive'}`,
@@ -166,7 +173,7 @@ export default function ManageItems() {
 
     try {
       await Promise.all(Array.from(selectedIds).map(id => deleteItemApi(id)));
-      setItems(items.filter(i => !selectedIds.has(i.id)));
+      queryClient.invalidateQueries({ queryKey: ['items'] });
       setSelectedIds(new Set());
       toast({ title: 'Success', description: 'Selected items deleted' });
     } catch {
@@ -176,13 +183,10 @@ export default function ManageItems() {
 
   const handleBulkToggleStatus = async (active: boolean) => {
     try {
-      const updatedItems = await Promise.all(
+      await Promise.all(
         Array.from(selectedIds).map(id => updateItemApi(id, { isActive: active }))
       );
-      setItems(items.map(i => {
-        const updated = updatedItems.find(u => u.id === i.id);
-        return updated || i;
-      }));
+      queryClient.invalidateQueries({ queryKey: ['items'] });
       setSelectedIds(new Set());
       toast({ title: 'Success', description: `Items ${active ? 'activated' : 'deactivated'}` });
     } catch {

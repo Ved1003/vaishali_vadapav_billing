@@ -152,6 +152,27 @@ export const getBillerRevenueApi = async (period: string = 'monthly'): Promise<B
   return apiCall<BillerRevenue[]>(`/dashboard/biller-revenue?period=${period}`);
 };
 
+export const getDashboardOverviewApi = async (params: {
+  statsPeriod?: string;
+  billerPeriod?: string;
+  chartDays?: number;
+} = {}): Promise<{
+  stats: DashboardStats;
+  billerRevenue: BillerRevenue[];
+  dailyRevenue: DailyRevenue[];
+}> => {
+  const queryParams = new URLSearchParams();
+  if (params.statsPeriod) queryParams.append('statsPeriod', params.statsPeriod);
+  if (params.billerPeriod) queryParams.append('billerPeriod', params.billerPeriod);
+  if (params.chartDays) queryParams.append('chartDays', String(params.chartDays));
+
+  return apiCall<{
+    stats: DashboardStats;
+    billerRevenue: BillerRevenue[];
+    dailyRevenue: DailyRevenue[];
+  }>(`/dashboard/overview?${queryParams.toString()}`);
+};
+
 // ============ ITEMS API ============
 export const getItemsApi = async (): Promise<Item[]> => {
   return apiCall<Item[]>('/items');
