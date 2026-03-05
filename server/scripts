@@ -1,0 +1,83 @@
+// Simple seed script without TypeScript
+require('dotenv').config();
+const mongoose = require('mongoose');
+
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/swiftbill_db';
+
+// Import models (we'll define them inline to avoid TS issues)
+const bcrypt = require('bcryptjs');
+
+const userSchema = new mongoose.Schema({
+    name: String,
+    username: { type: String, unique: true },
+    password: String,
+    role: String,
+    status: String,
+    createdAt: { type: Date, default: Date.now }
+});
+
+userSchema.pre('save', async function (next) {
+    if (!this.isModified('password')) return next();
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+});
+
+const User = mongoose.model('User', userSchema);
+
+const itemSchema = new mongoose.Schema({
+    name: String,
+    price: Number,
+    isActive: Boolean
+}, { timestamps: true });
+
+const Item = mongoose.model('Item', itemSchema);
+
+async function seed() {
+    try {
+        console.log('🌱 Starting database seeding...');
+
+        await mongoose.connect(MONGODB_URI);
+        console.log('✅ Connected to MongoDB');
+
+        // Clear existing data
+        await User.deleteMany({});
+        await Item.deleteMany({});
+        console.log('🗑️  Cleared existing data');
+
+        // Create users
+        const users = await User.create([
+            { name: 'Admin User', username: 'admin', password: 'admin', role: 'ADMIN', status: 'active' },
+            { name: 'Rahul Sharma', username: 'rahul', password: 'employee', role: 'BILLER', status: 'active' },
+            { name: 'Priya Patel', username: 'priya', password: 'employee', role: 'BILLER', status: 'active' }
+        ]);
+        console.log(`✅ Created ${users.length} users`);
+
+        // Create menu items
+        const items = await Item.create([
+            { name: 'Samosa', price: 15, isActive: true },
+            { name: 'Vada Pav', price: 20, isActive: true },
+            { name: 'Bhaji Pav', price: 30, isActive: true },
+            { name: 'Poha', price: 25, isActive: true },
+            { name: 'Tea', price: 10, isActive: true },
+            { name: 'Coffee', price: 15, isActive: true },
+            { name: 'Dosa', price: 45, isActive: true },
+            { name: 'Masala Dosa', price: 55, isActive: true }
+        ]);
+        console.log(`✅ Created ${items.length} menu items`);
+
+        console.log('🎉 Database seeding completed!');
+        console.log('\n📝 Demo Credentials:');
+        console.log('   Admin: username=admin, password=admin');
+        console.log('   Employee: username=rahul, password=employee');
+        console.log('   Employee: username=priya, password=employee');
+
+        await mongoose.connection.close();
+        process.exit(0);
+    } catch (error) {
+        console.error('❌ Seeding failed:', error);
+        process.exit(1);
+    }
+}
+
+seed();

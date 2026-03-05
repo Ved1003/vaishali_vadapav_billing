@@ -1,0 +1,16 @@
+{
+  "name": "tanmay-billing-app",
+  "version": "2.0.0",
+  "description": "Billing Application – Web Admin + Android Billing",
+  "author": "Tanmay Project Snacks",
+  "scripts": {
+    "client:dev": "cd Client && npm run dev",
+    "server:dev": "cd server && npm run dev",
+    "dev": "concurrently \"npm run server:dev\" \"npm run client:dev\"",
+    "client:build": "cd Client && npm install && npm run build",
+    "server:build": "cd server && npm install && npm run build"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
