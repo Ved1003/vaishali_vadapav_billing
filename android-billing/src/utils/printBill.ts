@@ -108,36 +108,32 @@ export function printBill(bill: Bill): void {
   const isAndroidNative = Capacitor.getPlatform() === 'android';
 
   if (isAndroidNative) {
-    // ── Native Android path ──────────────────────────────────────────
-    if (win.AndroidPrint && typeof win.AndroidPrint.printHtml === 'function') {
-      console.log('[printBill] Using AndroidPrint native bridge');
-      win.AndroidPrint.printHtml(html);
-    } else {
-      // Bridge not yet available – retry once after a short delay
-      console.warn('[printBill] AndroidPrint bridge not found, retrying in 800ms…');
-      setTimeout(() => {
-        if (win.AndroidPrint && typeof win.AndroidPrint.printHtml === 'function') {
-          console.log('[printBill] Retry succeeded – AndroidPrint bridge found');
-          win.AndroidPrint.printHtml(html);
-        } else {
-          console.error('[printBill] AndroidPrint bridge still not found after retry.');
-          alert('Printing unavailable. Please rebuild the app to enable the print bridge.');
-        }
-      }, 800);
+    const tryPrint = (attempts: number) => {
+      if (win.AndroidPrint?.printHtml) {
+        win.AndroidPrint.printHtml(html);
+        return true;
+      }
+      if (attempts > 0) {
+        setTimeout(() => tryPrint(attempts - 1), 100);
+      } else {
+        alert('Printing unavailable. Please restart the app.');
+      }
+      return false;
+    };
+
+    // Try immediately, if fails, poll every 100ms for 1 second total
+    if (!tryPrint(10)) {
+      console.warn('[printBill] AndroidPrint bridge not found, polling...');
     }
   } else {
     // ── Desktop / Browser path ───────────────────────────────────────
-    console.log('[printBill] Using popup window for desktop printing');
     const popup = window.open('', '_blank', 'width=350,height=650');
     if (popup) {
       popup.document.write(html);
       popup.document.close();
       popup.focus();
-      setTimeout(() => {
-        popup.print();
-      }, 500);
-    } else {
-      console.error('[printBill] Popup was blocked by the browser.');
+      // Reduced delay for faster printing
+      setTimeout(() => { popup.print(); }, 100);
     }
   }
 }

@@ -528,8 +528,8 @@ export default function BillingScreen() {
                 colors: ['#f97316', '#fbbf24', '#ffffff']
             });
 
-            // Use printBill utility (works in Capacitor Android WebView, unlike window.print)
-            setTimeout(() => printBill(bill), 300);
+            // Trigger print immediately for maximum speed during rush hours
+            printBill(bill);
         } catch (error: unknown) {
             const msg = error instanceof Error ? error.message : 'Unknown error';
             toast({ title: 'Failed to create bill', description: msg, variant: 'destructive' });
