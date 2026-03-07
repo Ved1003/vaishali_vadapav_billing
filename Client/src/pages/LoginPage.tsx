@@ -113,12 +113,12 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-[#F7F7F9] dark:bg-[#0B0C10]">
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        {/* Gradient Orbs */}
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-orange-500/20 dark:bg-orange-600/10 blur-[120px] rounded-full animate-pulse" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-amber-500/20 dark:bg-amber-600/10 blur-[120px] rounded-full animate-pulse delay-700" />
-        <div className="absolute top-[20%] right-[10%] w-[20%] h-[20%] bg-orange-400/10 blur-[80px] rounded-full animate-bounce duration-[10s]" />
+      {/* Optimized Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {/* Gradient Orbs - Reduced blur for much better performance */}
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-orange-500/10 dark:bg-orange-600/5 blur-[60px] rounded-full" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-amber-500/10 dark:bg-amber-600/5 blur-[60px] rounded-full delay-700" />
+        <div className="absolute top-[20%] right-[10%] w-[20%] h-[20%] bg-orange-400/5 blur-[40px] rounded-full" />
       </div>
 
       {/* Floating Snack Icons */}
@@ -219,11 +219,15 @@ export default function LoginPage() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.7, delay: 0.3 }}
           >
-            {/* Mobile Header */}
+            {/* Mobile Header - Optimized with bundle icon */}
             <div className="lg:hidden flex flex-col items-center mb-8">
-              <div className="h-20 w-20 rounded-3xl bg-white dark:bg-[#1C1D21] border border-slate-200/50 dark:border-white/5 flex items-center justify-center shadow-xl shadow-orange-500/10 mb-4 overflow-hidden">
-                <img src="/logo.png" alt="Logo" className="w-16 h-16 object-contain" />
-              </div>
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="h-20 w-20 rounded-3xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center shadow-2xl shadow-orange-500/20 mb-4"
+              >
+                <ChefHat className="h-10 w-10 text-white" />
+              </motion.div>
               <h1 className="text-4xl font-black text-slate-900 dark:text-white text-center tracking-tight">
                 Vaishali Snacks
               </h1>
