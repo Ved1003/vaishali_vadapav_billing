@@ -196,7 +196,7 @@ export default function ManageUsers() {
   const inactiveUsers = users.filter(u => u.status === 'inactive').length;
 
   return (
-    <div className="min-h-full bg-gradient-to-br from-orange-50/30 via-amber-50/20 to-yellow-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-slate-900 p-4">
+    <div className="min-h-full bg-[#F7F7F9] dark:bg-[#0B0C10] p-4">
       <div className="max-w-[1400px] mx-auto space-y-4">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -205,10 +205,8 @@ export default function ManageUsers() {
               <UsersIcon className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-black bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
-                Manage Users
-              </h1>
-              <p className="text-slate-600 dark:text-slate-400 text-xs font-medium">Manage your billing counter staff</p>
+              <h1 className="text-xl font-bold text-slate-900 dark:text-white leading-none tracking-tight">Staff Forge</h1>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Manage counter billers</p>
             </div>
           </div>
           <Button
@@ -222,8 +220,8 @@ export default function ManageUsers() {
 
         {/* Stats Section */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="rounded-2xl border-2 border-white/50 dark:border-slate-700/50 shadow-md bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
-            <CardContent className="p-4">
+          <Card className="rounded-xl border border-slate-200/50 dark:border-white/5 shadow-sm bg-white dark:bg-[#1C1D21]">
+            <CardContent className="p-5">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Staff</p>
@@ -235,8 +233,8 @@ export default function ManageUsers() {
               </div>
             </CardContent>
           </Card>
-          <Card className="rounded-2xl border-2 border-white/50 dark:border-slate-700/50 shadow-md bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
-            <CardContent className="p-4">
+          <Card className="rounded-xl border border-slate-200/50 dark:border-white/5 shadow-sm bg-white dark:bg-[#1C1D21]">
+            <CardContent className="p-5">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Active</p>
@@ -248,14 +246,14 @@ export default function ManageUsers() {
               </div>
             </CardContent>
           </Card>
-          <Card className="rounded-2xl border-2 border-white/50 dark:border-slate-700/50 shadow-md bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
-            <CardContent className="p-4">
+          <Card className="rounded-xl border border-slate-200/50 dark:border-white/5 shadow-sm bg-white dark:bg-[#1C1D21]">
+            <CardContent className="p-5">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Restricted</p>
                   <p className="text-xl font-black text-slate-400 mt-1">{inactiveUsers}</p>
                 </div>
-                <div className="h-10 w-10 rounded-xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
+                <div className="h-10 w-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
                   <KeyIcon className="h-5 w-5 text-slate-400" />
                 </div>
               </div>
@@ -264,15 +262,15 @@ export default function ManageUsers() {
         </div>
 
         {/* Search Section */}
-        <Card className="rounded-2xl border-2 border-white/50 dark:border-slate-700/50 shadow-md bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
+        <Card className="rounded-xl border border-slate-200/50 dark:border-white/5 shadow-sm bg-white dark:bg-[#1C1D21]">
           <CardContent className="p-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-orange-400" />
+            <div className="relative flex-1 w-full group">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-orange-500 transition-colors" />
               <Input
-                placeholder="Search by name or username..."
+                placeholder="Search team members..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 h-10 rounded-xl bg-white dark:bg-slate-900 border-none text-sm"
+                className="pl-10 h-10 rounded-xl bg-slate-50 dark:bg-[#0B0C10] border-none shadow-none focus-visible:ring-2 focus-visible:ring-orange-500/20 font-bold text-sm"
               />
             </div>
           </CardContent>
@@ -288,44 +286,48 @@ export default function ManageUsers() {
             <AnimatePresence mode="popLayout">
               {filteredUsers.length === 0 ? (
                 <motion.div
+                  key="empty"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="col-span-full py-20 text-center bg-white/50 dark:bg-slate-800/50 rounded-2xl border-2 border-dashed border-orange-200"
+                  className="col-span-full py-20 text-center bg-white dark:bg-[#1C1D21] rounded-2xl border-2 border-dashed border-orange-100 dark:border-white/5"
                 >
-                  <div className="h-20 w-20 rounded-full bg-orange-100 dark:bg-orange-500/10 flex items-center justify-center mx-auto mb-4">
-                    <UserIcon className="h-10 w-10 text-orange-400" />
-                  </div>
-                  <h3 className="text-xl font-bold text-slate-800 dark:text-white">No users found</h3>
-                  <p className="text-slate-500">Try a different search term</p>
+                  <UsersIcon className="h-10 w-10 text-orange-200/50 mx-auto mb-3" />
+                  <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider">No members found</h3>
+                  <p className="text-xs text-slate-500 mt-1">Try adjusting your filters or search query</p>
                 </motion.div>
               ) : (
                 filteredUsers.map((user, idx) => (
                   <motion.div
                     key={user.id}
                     layout
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    transition={{ delay: idx * 0.02 }}
+                    initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    transition={{
+                      duration: 0.5,
+                      delay: idx * 0.04,
+                      ease: [0.23, 1, 0.32, 1]
+                    }}
                   >
-                    <Card className={cn(
-                      "group relative overflow-hidden rounded-2xl border-2 h-full transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/10",
-                      user.status === 'active'
-                        ? "bg-white dark:bg-slate-800 border-orange-100 dark:border-slate-700 hover:border-orange-400"
-                        : "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 opacity-80"
-                    )}>
+                    <Card
+                      className={cn(
+                        "group h-full relative border transition-all duration-300 rounded-xl overflow-hidden bg-white dark:bg-[#1C1D21]",
+                        user.status === 'active'
+                          ? "border-slate-200/50 dark:border-white/5 hover:border-orange-400 dark:hover:border-orange-500/50 hover:shadow-md"
+                          : "border-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 opacity-80"
+                      )}
+                    >
                       <div className="absolute top-0 right-0 p-1.5">
                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button variant="ghost" size="icon" onClick={() => openEditDialog(user)} className="h-7 w-7 rounded-lg bg-white/90 dark:bg-slate-800 shadow-sm hover:text-orange-600"><Pencil className="h-3 w-3" /></Button>
-                          <Button variant="ghost" size="icon" onClick={() => openPasswordDialog(user)} className="h-7 w-7 rounded-lg bg-white/90 dark:bg-slate-800 shadow-sm hover:text-orange-600"><KeyIcon className="h-3 w-3" /></Button>
-                          <Button variant="ghost" size="icon" onClick={() => openDeleteDialog(user)} className="h-7 w-7 rounded-lg bg-white/90 dark:bg-slate-800 shadow-sm hover:text-red-500"><Trash2 className="h-3 w-3" /></Button>
+                          <Button variant="ghost" size="icon" onClick={() => openEditDialog(user)} className="h-7 w-7 rounded-lg bg-white/90 dark:bg-[#0B0C10] shadow-sm hover:text-orange-600"><Pencil className="h-3 w-3" /></Button>
+                          <Button variant="ghost" size="icon" onClick={() => openPasswordDialog(user)} className="h-7 w-7 rounded-lg bg-white/90 dark:bg-[#0B0C10] shadow-sm hover:text-orange-600"><KeyIcon className="h-3 w-3" /></Button>
+                          <Button variant="ghost" size="icon" onClick={() => openDeleteDialog(user)} className="h-7 w-7 rounded-lg bg-white/90 dark:bg-[#0B0C10] shadow-sm hover:text-red-500"><Trash2 className="h-3 w-3" /></Button>
                         </div>
                       </div>
 
                       <CardHeader className="pb-2 pt-6 flex flex-col items-center text-center">
                         <div className={cn(
-                          "h-14 w-14 rounded-2xl flex items-center justify-center shadow-md relative mb-3 rotate-3 group-hover:rotate-0 transition-transform duration-500",
-                          user.status === 'active' ? "bg-gradient-to-br from-orange-500 to-amber-600" : "bg-slate-200 dark:bg-slate-700"
+                          "h-14 w-14 rounded-2xl flex items-center justify-center shadow-lg relative mb-3 rotate-3 group-hover:rotate-0 transition-all duration-500",
+                          user.status === 'active' ? "bg-gradient-to-br from-orange-500 to-amber-600" : "bg-slate-200 dark:bg-slate-800"
                         )}>
                           <UserIcon className={cn("h-7 w-7", user.status === 'active' ? "text-white" : "text-slate-400")} />
                           {user.isOnline && (
@@ -382,12 +384,6 @@ export default function ManageUsers() {
                               </div>
                             )}
 
-                            {!user.isOnline && user.lastLogout && (
-                              <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 dark:text-slate-500">
-                                <Clock className="h-3 w-3 text-slate-400" />
-                                <span>Active {formatDistanceToNow(new Date(user.lastLogout), { addSuffix: true })}</span>
-                              </div>
-                            )}
                             {!user.isOnline && !user.lastLogout && user.lastLogin && (
                               <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 dark:text-slate-500">
                                 <Clock className="h-3 w-3 text-slate-400" />
@@ -407,76 +403,90 @@ export default function ManageUsers() {
 
         {/* Dialogs */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="rounded-3xl border-2 border-orange-100 dark:border-slate-800">
-            <DialogHeader>
-              <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center shadow-lg mb-4">
-                <Plus className="h-8 w-8 text-white" />
-              </div>
-              <DialogTitle className="text-2xl font-black">Add New Biller</DialogTitle>
-              <DialogDescription>Create a new account for your billing counter staff.</DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4 pt-4">
-              <div className="space-y-2">
-                <Label className="font-bold ml-1">Full Name</Label>
-                <Input placeholder="e.g. Rahul Sharma" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="h-12 rounded-xl bg-orange-50/50 dark:bg-slate-900 border-none" />
-              </div>
-              <div className="space-y-2">
-                <Label className="font-bold ml-1">Username</Label>
-                <Input placeholder="e.g. rahul123" value={formData.username} onChange={(e) => setFormData({ ...formData, username: e.target.value })} className="h-12 rounded-xl bg-orange-50/50 dark:bg-slate-900 border-none" />
-              </div>
-              <div className="space-y-2">
-                <Label className="font-bold ml-1">Initial Password</Label>
-                <Input type="password" placeholder="6+ characters" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} className="h-12 rounded-xl bg-orange-50/50 dark:bg-slate-900 border-none" />
-              </div>
-              <DialogFooter className="mt-6">
-                <Button type="submit" className="w-full h-12 rounded-xl bg-gradient-to-r from-orange-500 to-amber-600 font-black shadow-lg shadow-orange-500/20">CREATE ACCOUNT</Button>
-              </DialogFooter>
-            </form>
+          <DialogContent className="rounded-[2rem] border-none shadow-2xl bg-white dark:bg-[#1C1D21] p-0 overflow-hidden max-w-md">
+            <div className="px-8 pt-8 pb-8">
+              <DialogHeader>
+                <div className="h-12 w-12 rounded-[1.25rem] bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center text-white shadow-xl shadow-orange-500/20">
+                  <UsersIcon className="h-6 w-6" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight uppercase leading-none">Team Members</h1>
+                  <p className="text-[10px] font-black text-orange-600 dark:text-orange-400 uppercase tracking-[0.2em] mt-2">Access Control Center</p>
+                </div>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4 pt-6">
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Full Name</Label>
+                  <Input placeholder="e.g. Rahul Sharma" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="h-12 rounded-xl bg-slate-100/50 dark:bg-[#0B0C10] border-none font-bold text-sm" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Username</Label>
+                  <Input placeholder="e.g. rahul123" value={formData.username} onChange={(e) => setFormData({ ...formData, username: e.target.value })} className="h-12 rounded-xl bg-slate-100/50 dark:bg-[#0B0C10] border-none font-bold text-sm" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Initial Password</Label>
+                  <Input type="password" placeholder="6+ characters" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} className="h-12 rounded-xl bg-slate-100/50 dark:bg-[#0B0C10] border-none font-bold text-sm" />
+                </div>
+                <div className="pt-4">
+                  <Button
+                    type="submit"
+                    className="flex-1 h-11 rounded-xl bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-black uppercase tracking-widest text-[11px] shadow-lg shadow-orange-500/20"
+                  >
+                    Create Member
+                  </Button>
+                </div>
+              </form>
+            </div>
           </DialogContent>
         </Dialog>
 
         {/* Edit User Dialog */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="rounded-3xl">
-            <DialogHeader>
-              <DialogTitle className="text-2xl font-black">Edit Biller Details</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleEditSubmit} className="space-y-4 pt-4">
-              <div className="space-y-2">
-                <Label className="font-bold ml-1">Full Name</Label>
-                <Input value={editFormData.name} onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })} className="h-12 rounded-xl bg-orange-50/50 dark:bg-slate-900 border-none" />
-              </div>
-              <div className="space-y-2">
-                <Label className="font-bold ml-1">Username</Label>
-                <Input value={editFormData.username} onChange={(e) => setEditFormData({ ...editFormData, username: e.target.value })} className="h-12 rounded-xl bg-orange-50/50 dark:bg-slate-900 border-none" />
-              </div>
-              <DialogFooter className="mt-6">
-                <Button type="submit" className="w-full h-12 rounded-xl bg-gradient-to-r from-orange-500 to-amber-600 font-black shadow-lg">UPDATE DETAILS</Button>
-              </DialogFooter>
-            </form>
+          <DialogContent className="rounded-[2rem] border-none shadow-2xl bg-white dark:bg-[#1C1D21] p-0 overflow-hidden max-w-md">
+            <div className="px-8 pt-8 pb-8">
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-black tracking-tight uppercase">Edit Biller Details</DialogTitle>
+                <DialogDescription className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1.5">Update account information</DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleEditSubmit} className="space-y-4 pt-6">
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Full Name</Label>
+                  <Input value={editFormData.name} onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })} className="h-12 rounded-xl bg-slate-100/50 dark:bg-[#0B0C10] border-none font-bold text-sm" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Username</Label>
+                  <Input value={editFormData.username} onChange={(e) => setEditFormData({ ...editFormData, username: e.target.value })} className="h-12 rounded-xl bg-slate-100/50 dark:bg-[#0B0C10] border-none font-bold text-sm" />
+                </div>
+                <div className="pt-4">
+                  <Button type="submit" className="w-full h-12 rounded-xl bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-black uppercase tracking-widest text-[11px] shadow-lg shadow-orange-500/20">UPDATE DETAILS</Button>
+                </div>
+              </form>
+            </div>
           </DialogContent>
         </Dialog>
 
         {/* Password Dialog */}
         <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
-          <DialogContent className="rounded-3xl">
-            <DialogHeader>
-              <DialogTitle className="text-2xl font-black">Reset Password</DialogTitle>
-              <DialogDescription>Updating password for <strong>{editingUser?.name}</strong></DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handlePasswordSubmit} className="space-y-4 pt-4">
-              <div className="space-y-2">
-                <Label className="font-bold ml-1">New Password</Label>
-                <Input type="password" placeholder="6+ characters" value={passwordFormData.password} onChange={(e) => setPasswordFormData({ ...passwordFormData, password: e.target.value })} className="h-12 rounded-xl bg-orange-50/50 dark:bg-slate-900 border-none" />
-              </div>
-              <div className="space-y-2">
-                <Label className="font-bold ml-1">Confirm Password</Label>
-                <Input type="password" placeholder="Repeat password" value={passwordFormData.confirmPassword} onChange={(e) => setPasswordFormData({ ...passwordFormData, confirmPassword: e.target.value })} className="h-12 rounded-xl bg-orange-50/50 dark:bg-slate-900 border-none" />
-              </div>
-              <DialogFooter className="mt-6">
-                <Button type="submit" className="w-full h-12 rounded-xl bg-gradient-to-r from-orange-500 to-amber-600 font-black shadow-lg">CHANGE PASSWORD</Button>
-              </DialogFooter>
-            </form>
+          <DialogContent className="rounded-[2rem] border-none shadow-2xl bg-white dark:bg-[#1C1D21] p-0 overflow-hidden max-w-md">
+            <div className="px-8 pt-8 pb-8">
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-black tracking-tight uppercase">Reset Password</DialogTitle>
+                <DialogDescription className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1.5">Updating password for <strong>{editingUser?.name}</strong></DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handlePasswordSubmit} className="space-y-4 pt-6">
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">New Password</Label>
+                  <Input type="password" placeholder="6+ characters" value={passwordFormData.password} onChange={(e) => setPasswordFormData({ ...passwordFormData, password: e.target.value })} className="h-12 rounded-xl bg-slate-100/50 dark:bg-[#0B0C10] border-none font-bold text-sm" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Confirm Password</Label>
+                  <Input type="password" placeholder="Repeat password" value={passwordFormData.confirmPassword} onChange={(e) => setPasswordFormData({ ...passwordFormData, confirmPassword: e.target.value })} className="h-12 rounded-xl bg-slate-100/50 dark:bg-[#0B0C10] border-none font-bold text-sm" />
+                </div>
+                <div className="pt-4">
+                  <Button type="submit" className="w-full h-12 rounded-xl bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-black uppercase tracking-widest text-[11px] shadow-lg shadow-orange-500/20">CHANGE PASSWORD</Button>
+                </div>
+              </form>
+            </div>
           </DialogContent>
         </Dialog>
 

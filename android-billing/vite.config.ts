@@ -11,6 +11,18 @@ export default defineConfig({
     },
     build: {
         outDir: "dist",
+        chunkSizeWarningLimit: 1000,
+        rollupOptions: {
+            output: {
+                manualChunks: {
+                    "vendor-react": ["react", "react-dom"],
+                    "vendor-router": ["react-router-dom"],
+                    "vendor-query": ["@tanstack/react-query"],
+                    "vendor-motion": ["framer-motion"],
+                    "vendor-icons": ["lucide-react"],
+                },
+            },
+        },
     },
     server: {
         host: true,

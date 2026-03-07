@@ -23,47 +23,47 @@ export function BillerLayout() {
   };
 
   return (
-    <div className="h-full overflow-hidden bg-slate-50 dark:bg-slate-950 flex flex-col font-sans selection:bg-orange-200">
+    <div className="h-full overflow-hidden bg-[#F7F7F9] dark:bg-[#0B0C10] flex flex-col font-sans selection:bg-orange-200">
       {/* Premium Header */}
-      <header className="sticky top-0 z-50 bg-white/70 dark:bg-slate-900/70 backdrop-blur-2xl border-b border-orange-100 dark:border-slate-800 px-6 py-4">
+      <header className="sticky top-0 z-50 bg-white/80 dark:bg-[#1C1D21]/80 backdrop-blur-2xl border-b border-slate-200 dark:border-white/5 px-6 py-5">
         <div className="max-w-[1800px] mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
             <motion.div
-              whileHover={{ rotate: 5 }}
-              className="h-11 w-11 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center shadow-lg shadow-orange-500/20"
+              whileHover={{ rotate: 5, scale: 1.05 }}
+              className="h-12 w-12 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center shadow-xl shadow-orange-500/20"
             >
-              <ChefHat className="h-5 w-5 text-white" />
+              <ChefHat className="h-6 w-6 text-white" />
             </motion.div>
             <div className="hidden sm:block">
-              <h1 className="text-lg font-black text-slate-800 dark:text-white leading-tight tracking-tight uppercase">Vaishali Snacks</h1>
-              <div className="flex items-center gap-2">
-                <div className="dot-live" />
-                <p className="text-[9px] font-black text-orange-600 uppercase tracking-widest">Live Billing Terminal</p>
+              <h1 className="text-xl font-black text-slate-900 dark:text-white leading-none tracking-tighter uppercase italic">Vaishali Snacks</h1>
+              <div className="flex items-center gap-2 mt-1">
+                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">Live Billing Terminal</p>
               </div>
             </div>
           </div>
 
           <div className="flex items-center gap-4 md:gap-8">
-            <div className="flex items-center gap-3 px-4 py-2 bg-orange-50 dark:bg-slate-800 rounded-2xl border border-orange-100/50 dark:border-slate-700">
-              <div className="h-8 w-8 rounded-xl bg-white dark:bg-slate-900 flex items-center justify-center shadow-sm">
-                <UserIcon className="h-4 w-4 text-orange-500" />
+            <div className="flex items-center gap-4 px-5 py-2.5 bg-slate-100 dark:bg-white/5 rounded-[1.25rem] border border-slate-200 dark:border-white/5 transition-all hover:bg-white/10">
+              <div className="h-9 w-9 rounded-xl bg-white dark:bg-slate-900 flex items-center justify-center shadow-sm border border-slate-200 dark:border-white/10">
+                <UserIcon className="h-4.5 w-4.5 text-orange-500" />
               </div>
               <div className="flex flex-col">
-                <span className="text-xs font-black text-slate-800 dark:text-white leading-none capitalize">{user?.name}</span>
-                <span className="text-[9px] font-black text-slate-400 uppercase tracking-tighter mt-0.5">Counter Staff</span>
+                <span className="text-xs font-black text-slate-900 dark:text-white leading-none capitalize tracking-tight">{user?.name}</span>
+                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">Counter Staff</span>
               </div>
             </div>
 
             <div className="flex items-center gap-2">
               {/* Live Clock */}
-              <div className="hidden md:flex items-center gap-2 bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-200/50 dark:border-slate-700">
-                <Clock className="h-3.5 w-3.5 text-orange-500" />
-                <span className="text-xs font-black text-slate-600 dark:text-slate-300 tabular-nums">
+              <div className="hidden md:flex items-center gap-3 bg-slate-100 dark:bg-white/5 px-4 py-2 rounded-[1.25rem] border border-slate-200 dark:border-white/5">
+                <Clock className="h-4 w-4 text-orange-500" />
+                <span className="text-xs font-black text-slate-600 dark:text-slate-300 tabular-nums tracking-tight">
                   {currentTime.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}
                 </span>
               </div>
               <ModeToggle />
-              <div className="h-8 w-px bg-orange-100 dark:bg-slate-800 mx-1 hidden md:block" />
+              <div className="h-10 w-px bg-slate-200 dark:bg-white/5 mx-2 hidden md:block" />
               <Button
                 variant="ghost"
                 size="icon"
@@ -92,9 +92,9 @@ export function BillerLayout() {
       </main>
 
       {/* Floating Status Badge (Mobile Only) */}
-      <div className="md:hidden fixed bottom-6 right-6 z-50">
-        <div className="bg-slate-900 text-white px-4 py-2 rounded-full shadow-2xl flex items-center gap-2 border border-white/10 backdrop-blur-md">
-          <Sparkles className="h-3 w-3 text-orange-400" />
+      <div className="md:hidden fixed bottom-10 right-10 z-50">
+        <div className="bg-orange-600 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 border-4 border-white/20 backdrop-blur-xl">
+          <Sparkles className="h-4 w-4 text-orange-200" />
           <span className="text-[10px] font-black uppercase tracking-widest">Active Session</span>
         </div>
       </div>

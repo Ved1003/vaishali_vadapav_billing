@@ -1,7 +1,7 @@
 import { useLocation, Link } from "react-router-dom";
 import { useEffect } from "react";
 import { motion } from "framer-motion";
-import { Home, Coffee, AlertCircle, UtensilsCrossed } from "lucide-react";
+import { Home, Coffee, AlertCircle, UtensilsCrossed, ChefHat, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const NotFound = () => {
@@ -12,11 +12,11 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 p-6 selection:bg-orange-200">
+    <div className="min-h-screen flex items-center justify-center bg-[#F7F7F9] dark:bg-[#0B0C10] p-6 selection:bg-orange-200">
       {/* Background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-orange-400 rounded-full blur-[100px]" />
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-amber-400 rounded-full blur-[80px]" />
+        <div className="absolute top-1/4 left-1/4 w-[30rem] h-[30rem] bg-orange-500 rounded-full blur-[150px]" />
+        <div className="absolute bottom-1/4 right-1/4 w-[25rem] h-[25rem] bg-amber-500 rounded-full blur-[130px]" />
       </div>
 
       <motion.div
@@ -26,34 +26,36 @@ const NotFound = () => {
       >
         <div className="mb-8 relative inline-block">
           <motion.div
-            animate={{ rotate: [0, 10, -10, 0] }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-            className="h-32 w-32 rounded-[2.5rem] bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center shadow-2xl mx-auto border-4 border-white dark:border-slate-800"
+            layoutId="logo"
+            className="h-20 w-20 rounded-[2.5rem] bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center mb-8 shadow-2xl shadow-orange-500/20 mx-auto"
           >
-            <UtensilsCrossed className="h-16 w-16 text-white" />
+            <ChefHat className="h-10 w-10 text-white" />
           </motion.div>
-          <div className="absolute -top-2 -right-2 bg-red-600 text-white font-black text-xs px-3 py-1 rounded-full shadow-lg">
+          <div className="absolute -top-4 -right-4 bg-orange-600 text-white font-black text-xs px-4 py-1.5 rounded-full shadow-2xl border-4 border-white dark:border-[#1C1D21] tracking-widest uppercase">
             NOT FOUND
           </div>
         </div>
 
-        <h1 className="text-8xl font-black text-slate-800 dark:text-white mb-2 tracking-tighter">404</h1>
-        <h2 className="text-2xl font-black text-orange-600 uppercase tracking-widest mb-6 italic">Kitchen Closed!</h2>
+        <h1 className="text-[10rem] font-black text-slate-900 dark:text-white mb-2 tracking-tighter leading-none opacity-10">404</h1>
+        <h2 className="text-4xl font-black text-orange-600 uppercase tracking-tighter mb-8 italic">Kitchen Closed!</h2>
 
-        <p className="text-slate-600 dark:text-slate-400 font-bold mb-10 leading-relaxed px-4">
-          Oops! It looks like <span className="text-orange-600 font-marker px-1">"{location.pathname}"</span> isn't on the menu today. Let's get you back to the main counter.
+        <p className="text-slate-500 dark:text-slate-400 font-black text-[10px] uppercase tracking-[0.3em] mb-12 leading-loose px-8">
+          Oops! It looks like <span className="text-orange-600 px-2">"{location.pathname}"</span> isn't on the menu today. Let's get you back to the main counter.
         </p>
 
-        <Link to="/">
-          <Button className="h-16 px-10 rounded-[1.5rem] bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-black text-xl shadow-2xl shadow-orange-500/30 group">
-            <Home className="mr-3 h-6 w-6 group-hover:scale-110 transition-transform" />
-            GO HOME
-          </Button>
-        </Link>
+        <Button
+          asChild
+          className="h-14 px-10 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-black uppercase tracking-widest text-[11px] shadow-xl shadow-orange-500/20 group"
+        >
+          <Link to="/">
+            <ArrowLeft className="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform" />
+            Back to Home
+          </Link>
+        </Button>
 
-        <div className="mt-12 flex items-center justify-center gap-2 opacity-40">
-          <Coffee className="h-4 w-4 text-orange-400" />
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Vaishali Snacks Admin Panel</p>
+        <div className="mt-16 flex items-center justify-center gap-3 opacity-30">
+          <Coffee className="h-5 w-5 text-orange-400" />
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">Vaishali Snacks Core System</p>
         </div>
       </motion.div>
     </div>

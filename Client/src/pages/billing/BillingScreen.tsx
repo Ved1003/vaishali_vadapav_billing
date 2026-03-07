@@ -109,7 +109,7 @@ export default function BillingScreen() {
   const getItemCount = (itemId: string) => billItems.find(bi => bi.itemId === itemId)?.quantity || 0;
 
   if (isLoading) return (
-    <div className="flex items-center justify-center h-screen bg-gradient-to-br from-orange-50 to-amber-50 dark:from-slate-950 dark:to-slate-900">
+    <div className="flex items-center justify-center h-screen bg-[#F7F7F9] dark:bg-[#0B0C10]">
       <div className="flex flex-col items-center gap-4">
         <div className="h-16 w-16 rounded-full border-4 border-orange-200 dark:border-orange-900 border-t-orange-600 dark:border-t-orange-400 animate-spin"></div>
         <p className="text-slate-600 dark:text-slate-400 font-semibold animate-pulse">Loading Menu...</p>
@@ -119,9 +119,9 @@ export default function BillingScreen() {
 
   return (
     <>
-      <div className="flex flex-col lg:flex-row flex-1 bg-[#f8fafc] dark:bg-slate-950 print:hidden overflow-hidden">
+      <div className="flex flex-col lg:flex-row flex-1 bg-[#F7F7F9] dark:bg-[#0B0C10] print:hidden overflow-hidden">
         {/* Left Section: Menu */}
-        <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-slate-900 shadow-sm z-10 transition-colors">
+        <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-[#1C1D21] shadow-sm z-10 transition-colors">
           {/* Menu Header with Search */}
           <div className="p-4 border-b border-slate-100 dark:border-slate-800">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 max-w-5xl mx-auto w-full">
@@ -135,22 +135,14 @@ export default function BillingScreen() {
                 </div>
               </div>
 
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3.5 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <div className="flex-1 relative group">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-orange-500 transition-colors" />
                 <Input
-                  placeholder="Quick search (e.g. Vada Pav)"
+                  placeholder="Search delicious snacks..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 h-10 text-sm rounded-xl bg-slate-50 dark:bg-slate-800 border-none focus:ring-2 focus:ring-orange-500/20 transition-all"
+                  className="w-full pl-12 h-14 bg-white/80 dark:bg-[#1C1D21]/80 backdrop-blur-xl border-slate-200 dark:border-white/5 rounded-2xl text-base font-bold focus-visible:ring-2 focus-visible:ring-orange-500/20 transition-all shadow-sm"
                 />
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-orange-600"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                )}
               </div>
             </div>
           </div>
@@ -162,6 +154,7 @@ export default function BillingScreen() {
                 <AnimatePresence mode="popLayout">
                   {filteredItems.map((item, idx) => {
                     const count = getItemCount(item.id);
+                    const isInCart = count > 0;
                     return (
                       <motion.button
                         key={item.id}
@@ -177,8 +170,8 @@ export default function BillingScreen() {
                         }}
                         onClick={() => addItem(item)}
                         className={cn(
-                          "group relative h-32 flex flex-col justify-between p-4 rounded-[1.25rem] border-2 transition-all duration-300 text-left overflow-hidden",
-                          count > 0
+                          "group relative h-32 flex flex-col justify-between p-4 rounded-3xl border-2 transition-all duration-300 text-left overflow-hidden",
+                          isInCart
                             ? "bg-orange-50/50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-900/50 shadow-md"
                             : "bg-white dark:bg-slate-800 border-slate-50 dark:border-slate-800 hover:border-orange-100 dark:hover:border-orange-900/30 shadow-sm"
                         )}
@@ -188,7 +181,7 @@ export default function BillingScreen() {
 
                         {/* Quantity Badge */}
                         <AnimatePresence>
-                          {count > 0 && (
+                          {isInCart && (
                             <motion.div
                               initial={{ opacity: 0, scale: 0.5, y: -10 }}
                               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -202,8 +195,8 @@ export default function BillingScreen() {
 
                         <div className="relative z-10 flex-1">
                           <h3 className={cn(
-                            "font-extrabold text-[13px] leading-snug transition-colors line-clamp-2 uppercase tracking-tight",
-                            count > 0 ? "text-orange-900 dark:text-orange-100" : "text-slate-700 dark:text-slate-100 group-hover:text-orange-700 dark:group-hover:text-orange-400"
+                            "font-extrabold text-sm leading-snug transition-colors line-clamp-2 uppercase tracking-tight",
+                            isInCart ? "text-orange-900 dark:text-orange-100" : "text-slate-700 dark:text-slate-100 group-hover:text-orange-700 dark:group-hover:text-orange-400"
                           )}>
                             {item.name}
                           </h3>
@@ -214,7 +207,7 @@ export default function BillingScreen() {
                             <span className="text-[11px] font-black text-slate-400 mr-0.5">₹</span>
                             <span className={cn(
                               "text-lg font-black transition-colors tracking-tighter",
-                              count > 0 ? "text-orange-700 dark:text-orange-400" : "text-slate-900 dark:text-white"
+                              isInCart ? "text-orange-700 dark:text-orange-400" : "text-slate-900 dark:text-white"
                             )}>
                               {item.price}
                             </span>
@@ -224,7 +217,7 @@ export default function BillingScreen() {
                         {/* Plus Button in Corner */}
                         <div className={cn(
                           "absolute bottom-3 right-3 h-8 w-8 rounded-xl flex items-center justify-center text-white shadow-lg transition-all duration-300 z-20",
-                          count > 0
+                          isInCart
                             ? "bg-orange-600 scale-110 shadow-orange-500/20"
                             : "bg-slate-900 dark:bg-slate-700 group-hover:bg-orange-600 group-hover:scale-110 shadow-slate-900/10 group-hover:shadow-orange-500/20"
                         )}>
@@ -249,7 +242,7 @@ export default function BillingScreen() {
         </div>
 
         {/* Right Section: Order Ticket */}
-        <div className="w-[340px] lg:w-[380px] xl:w-[420px] bg-[#fdfdfd] dark:bg-slate-900 flex flex-col shadow-[-10px_0_30px_-15px_rgba(0,0,0,0.1)] z-20">
+        <div className="w-[340px] lg:w-[380px] xl:w-[420px] bg-white dark:bg-[#1C1D21] flex flex-col shadow-[-10px_0_30px_-15px_rgba(0,0,0,0.1)] z-20 border-l border-slate-200/50 dark:border-white/5">
           {/* Ticket Header */}
           <div className="p-6 pb-4">
             <div className="flex items-center justify-between mb-2">

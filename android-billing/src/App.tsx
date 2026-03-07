@@ -7,12 +7,18 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { BillerLayout } from "@/components/layouts/BillerLayout";
-import LoginPage from "./pages/LoginPage";
-import BillingScreen from "./pages/billing/BillingScreen";
-
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { Capacitor } from "@capacitor/core";
 import { StatusBar, Style } from "@capacitor/status-bar";
+
+const LoginPage = lazy(() => import("./pages/LoginPage"));
+const BillingScreen = lazy(() => import("./pages/billing/BillingScreen"));
+
+const LoadingFallback = () => (
+    <div className="h-screen w-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
+        <div className="h-10 w-10 rounded-full border-4 border-cyan-100 border-t-cyan-600 animate-spin" />
+    </div>
+);
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -41,28 +47,30 @@ const App = () => {
                         <Toaster />
                         <Sonner />
                         <BrowserRouter>
-                            <Routes>
-                                {/* Default: redirect to login */}
-                                <Route path="/" element={<Navigate to="/login" replace />} />
+                            <Suspense fallback={<LoadingFallback />}>
+                                <Routes>
+                                    {/* Default: redirect to login */}
+                                    <Route path="/" element={<Navigate to="/login" replace />} />
 
-                                {/* Public route */}
-                                <Route path="/login" element={<LoginPage />} />
+                                    {/* Public route */}
+                                    <Route path="/login" element={<LoginPage />} />
 
-                                {/* Billing – BILLER role only */}
-                                <Route
-                                    path="/billing"
-                                    element={
-                                        <ProtectedRoute allowedRoles={['BILLER']}>
-                                            <BillerLayout />
-                                        </ProtectedRoute>
-                                    }
-                                >
-                                    <Route index element={<BillingScreen />} />
-                                </Route>
+                                    {/* Billing – BILLER role only */}
+                                    <Route
+                                        path="/billing"
+                                        element={
+                                            <ProtectedRoute allowedRoles={['BILLER']}>
+                                                <BillerLayout />
+                                            </ProtectedRoute>
+                                        }
+                                    >
+                                        <Route index element={<BillingScreen />} />
+                                    </Route>
 
-                                {/* Catch-all */}
-                                <Route path="*" element={<Navigate to="/login" replace />} />
-                            </Routes>
+                                    {/* Catch-all */}
+                                    <Route path="*" element={<Navigate to="/login" replace />} />
+                                </Routes>
+                            </Suspense>
                         </BrowserRouter>
                     </TooltipProvider>
                 </AuthProvider>

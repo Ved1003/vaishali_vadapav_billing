@@ -199,7 +199,7 @@ export default function ManageItems() {
 
   if (isLoading) {
     return (
-      <div className="h-full flex items-center justify-center p-8 bg-slate-50 dark:bg-slate-950">
+      <div className="h-full flex items-center justify-center p-8 bg-[#F7F7F9] dark:bg-[#0B0C10]">
         <div className="flex flex-col items-center gap-4">
           <div className="h-10 w-10 rounded-full border-4 border-slate-200 dark:border-slate-800 border-t-orange-600 animate-spin"></div>
           <p className="text-slate-500 font-bold uppercase text-[10px] tracking-widest">Syncing Inventory...</p>
@@ -209,16 +209,16 @@ export default function ManageItems() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-slate-50 dark:bg-slate-950 overflow-hidden">
+    <div className="flex flex-col h-full bg-slate-50/30 dark:bg-black/20 overflow-hidden">
       {/* ── Page Header ────────────────────────────────────────────── */}
-      <div className="shrink-0 px-6 py-5 border-b border-slate-200 dark:border-slate-900 bg-white dark:bg-slate-900 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="shrink-0 px-6 py-5 border-b border-slate-200/50 dark:border-white/5 bg-white dark:bg-[#1C1D21] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-xl bg-orange-50 dark:bg-orange-950/30 flex items-center justify-center text-orange-600 shadow-inner">
             <Package className="h-5 w-5" />
           </div>
           <div>
-            <h1 className="text-xl font-black text-slate-900 dark:text-white leading-none tracking-tight">INVENTORY</h1>
-            <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">Manage your snack catalog</p>
+            <h1 className="text-xl font-bold text-slate-900 dark:text-white leading-none tracking-tight">Inventory</h1>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Manage your snack catalog</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -241,20 +241,20 @@ export default function ManageItems() {
       </div>
 
       {/* ── Toolbar & Filters ───────────────────────────────────────── */}
-      <div className="shrink-0 px-6 py-3 border-b border-slate-100 dark:border-slate-900 bg-white dark:bg-slate-900/50 flex flex-col md:flex-row items-center gap-3">
+      <div className="shrink-0 px-6 py-3 border-b border-slate-100 dark:border-white/5 bg-white dark:bg-[#1C1D21]/50 flex flex-col md:flex-row items-center gap-3">
         <div className="relative flex-1 w-full group">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-orange-500 transition-colors" />
           <Input
             placeholder="Search catalog..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 h-10 rounded-xl bg-slate-100/50 dark:bg-slate-950 border-none shadow-none focus-visible:ring-2 focus-visible:ring-orange-500 font-bold text-sm"
+            className="pl-10 h-10 rounded-xl bg-slate-50 dark:bg-[#0B0C10] border-none shadow-none focus-visible:ring-2 focus-visible:ring-orange-500/20 font-bold text-sm"
           />
         </div>
 
         <div className="flex items-center gap-2 w-full md:w-auto">
           <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as FilterOption)}>
-            <SelectTrigger className="w-full sm:w-[130px] h-10 rounded-xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 font-bold text-xs">
+            <SelectTrigger className="w-full sm:w-[130px] h-10 rounded-xl border-slate-200 dark:border-white/5 bg-white dark:bg-[#1C1D21] font-bold text-xs">
               <Filter className="h-3.5 w-3.5 mr-2 text-orange-500" />
               <SelectValue placeholder="Status" />
             </SelectTrigger>
@@ -266,7 +266,7 @@ export default function ManageItems() {
           </Select>
 
           <Select value={sortOption} onValueChange={(v) => setSortOption(v as SortOption)}>
-            <SelectTrigger className="w-full sm:w-[130px] h-10 rounded-xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 font-bold text-xs">
+            <SelectTrigger className="w-full sm:w-[130px] h-10 rounded-xl border-slate-200 dark:border-white/5 bg-white dark:bg-[#1C1D21] font-bold text-xs">
               <ArrowUpDown className="h-3.5 w-3.5 mr-2 text-orange-500" />
               <SelectValue placeholder="Sort" />
             </SelectTrigger>
@@ -321,18 +321,20 @@ export default function ManageItems() {
                     <motion.div
                       key={item.id}
                       layout
-                      initial={{ opacity: 0, y: 10 }}
+                      initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.95 }}
-                      transition={{ delay: idx * 0.02 }}
+                      transition={{
+                        duration: 0.5,
+                        delay: idx * 0.04,
+                        ease: [0.23, 1, 0.32, 1]
+                      }}
                     >
                       <Card
                         className={cn(
-                          "group h-full relative border flex flex-col transition-all duration-300 rounded-[1.25rem] overflow-hidden cursor-pointer",
-                          isSelected
-                            ? "border-orange-500 bg-orange-50/30 dark:bg-orange-950/20 ring-1 ring-orange-500/20"
-                            : "border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-orange-200 dark:hover:border-orange-900/50 hover:shadow-md",
-                          !item.isActive && !isSelected && "bg-slate-50/50 dark:bg-slate-950/50 grayscale opacity-80"
+                          "group h-full relative border transition-all duration-300 rounded-xl overflow-hidden bg-white dark:bg-[#1C1D21]",
+                          false ? "border-red-100 dark:border-red-900/30" : false ? "border-amber-100 dark:border-amber-900/30" : "border-slate-200/50 dark:border-white/5 hover:border-orange-400 dark:hover:border-orange-500/50 hover:shadow-md",
+                          !item.isActive && "grayscale bg-slate-50/50 dark:bg-[#0B0C10] opacity-80"
                         )}
                         onClick={() => toggleSelection(item.id)}
                       >
@@ -341,7 +343,7 @@ export default function ManageItems() {
                             <div className={cn(
                               "h-9 w-9 rounded-lg flex items-center justify-center transition-colors",
                               item.isActive
-                                ? "bg-slate-50 dark:bg-slate-800 text-orange-600"
+                                ? "bg-slate-50 dark:bg-[#0B0C10] text-orange-600"
                                 : "bg-slate-100 dark:bg-slate-950 text-slate-400"
                             )}>
                               <Package className="h-4.5 w-4.5" />
@@ -372,7 +374,7 @@ export default function ManageItems() {
                             </div>
                           </div>
 
-                          <div className="mt-4 flex items-center justify-between pt-3 border-t border-slate-50 dark:border-slate-800/50">
+                          <div className="mt-4 flex items-center justify-between pt-3 border-t border-slate-50 dark:border-white/5">
                             <div className="flex flex-col">
                               <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight leading-none mb-0.5">Price</span>
                               <span className="text-base font-black text-orange-600 dark:text-orange-400 tabular-nums">
@@ -504,14 +506,13 @@ export default function ManageItems() {
 
               <div className="space-y-2">
                 <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Retail Price</Label>
-                <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-orange-600 font-black text-base">₹</span>
+                <div className="relative group">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-orange-600 font-black text-sm group-focus-within:scale-110 transition-transform">₹</span>
                   <Input
                     type="number"
-                    placeholder="0.00"
                     value={formData.price}
                     onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                    className="h-11 pl-10 rounded-xl bg-slate-100/50 dark:bg-slate-950 border-none px-4 font-black text-base"
+                    className="h-11 pl-10 rounded-xl bg-slate-100/50 dark:bg-[#0B0C10] border-none font-black text-sm focus-visible:ring-2 focus-visible:ring-orange-500/20"
                   />
                 </div>
               </div>
@@ -527,9 +528,9 @@ export default function ManageItems() {
                 </Button>
                 <Button
                   type="submit"
-                  className="flex-1 h-11 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-black uppercase tracking-widest text-[11px] shadow-lg shadow-orange-500/20"
+                  className="flex-1 h-11 rounded-xl bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-black uppercase tracking-widest text-[11px] shadow-lg shadow-orange-500/20"
                 >
-                  {editingItem ? 'Update' : 'Create'}
+                  {editingItem ? 'Update Item' : 'Create Item'}
                 </Button>
               </div>
             </form>

@@ -24,6 +24,8 @@ export interface Item {
     name: string;
     price: number;
     isActive: boolean;
+    category?: string;
+    soldCount?: number;
 }
 
 // Bill Types
@@ -57,4 +59,6 @@ export interface FridgeItem {
     lowStockThreshold: number;
     unit: string;
     isActive: boolean;
+    category?: string;
+    soldCount?: number;
 }

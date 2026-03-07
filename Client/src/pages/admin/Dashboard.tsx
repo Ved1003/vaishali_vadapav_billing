@@ -204,8 +204,8 @@ export default function AdminDashboard() {
   );
 
   return (
-    <div className="min-h-full bg-gradient-to-br from-orange-50/30 via-amber-50/20 to-yellow-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-slate-900">
-      <div className="max-w-[1440px] mx-auto px-5 py-5 space-y-5">
+    <div className="min-h-full bg-slate-50/30 dark:bg-black/20">
+      <div className="mx-auto p-8 space-y-8">
 
         {/* ── Page Header ──────────────────────────────────────── */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -219,10 +219,10 @@ export default function AdminDashboard() {
           <div className="flex flex-wrap items-center gap-2">
             {/* Live pill */}
             <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-orange-50 dark:bg-orange-500/10 border border-orange-200 dark:border-orange-500/20">
-              <span className="relative flex h-2 w-2">
+              <div className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500" />
-              </span>
+              </div>
               <span className="text-[11px] font-semibold text-orange-600 dark:text-orange-400">Live</span>
             </div>
 
@@ -241,7 +241,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Period selector */}
-            <div className="flex items-center gap-1.5 bg-white dark:bg-slate-800 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700">
+            <div className="flex items-center gap-1.5 bg-white dark:bg-[#1C1D21] px-2.5 py-1.5 rounded-full border border-slate-200/50 dark:border-white/5 shadow-sm">
               <Calendar className="h-3.5 w-3.5 text-orange-500 shrink-0" />
               <Select value={statsPeriod} onValueChange={v => setStatsPeriod(v as TimePeriod)}>
                 <SelectTrigger className="w-24 border-0 h-auto p-0 text-xs font-semibold focus:ring-0 text-slate-700 dark:text-slate-200 bg-transparent shadow-none">
@@ -272,11 +272,15 @@ export default function AdminDashboard() {
               const isCurrency = card.isCurrency !== false;
               return (
                 <motion.div key={card.label}
-                  initial={{ opacity: 0, y: 12 }}
+                  initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.06 }}>
-                  <Card className="bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/50 rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-200">
-                    <CardContent className="p-4">
+                  transition={{
+                    duration: 0.5,
+                    delay: idx * 0.05,
+                    ease: [0.23, 1, 0.32, 1]
+                  }}>
+                  <Card className="bg-white dark:bg-[#1C1D21] border border-slate-200/60 dark:border-white/5 rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-200">
+                    <CardContent className="p-5">
                       <div className="flex items-start justify-between mb-3">
                         <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide leading-none">{card.label}</p>
                         <div className={cn('h-7 w-7 rounded-lg flex items-center justify-center shrink-0', card.iconBg)}>
@@ -336,8 +340,8 @@ export default function AdminDashboard() {
 
             {/* Revenue Chart */}
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
-              <Card className="bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/50 rounded-2xl shadow-sm">
-                <CardHeader className="px-5 pt-5 pb-0">
+              <Card className="bg-white dark:bg-[#1C1D21] border border-slate-200/50 dark:border-white/5 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)]">
+                <CardHeader className="px-6 pt-6 pb-0">
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <CardTitle className="text-sm font-semibold text-slate-800 dark:text-white">Revenue Analytics</CardTitle>
@@ -349,7 +353,7 @@ export default function AdminDashboard() {
                         <button
                           onClick={() => setChartType('bar')}
                           className={cn(
-                            'px-2.5 py-1.5 rounded-md text-xs font-semibold transition-all',
+                            'px-3 py-1.5 rounded-md text-xs font-semibold transition-all',
                             chartType === 'bar'
                               ? 'bg-white dark:bg-slate-700 text-orange-600 dark:text-orange-400 shadow-sm'
                               : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
@@ -359,7 +363,7 @@ export default function AdminDashboard() {
                         <button
                           onClick={() => setChartType('line')}
                           className={cn(
-                            'px-2.5 py-1.5 rounded-md text-xs font-semibold transition-all',
+                            'px-3 py-1.5 rounded-md text-xs font-semibold transition-all',
                             chartType === 'line'
                               ? 'bg-white dark:bg-slate-700 text-orange-600 dark:text-orange-400 shadow-sm'
                               : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
@@ -396,17 +400,17 @@ export default function AdminDashboard() {
                           <BarChart data={dailyRevenue} margin={{ top: 4, right: 4, left: -24, bottom: 0 }} barSize={28}>
                             <defs>
                               <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor="#f97316" stopOpacity={0.95} />
-                                <stop offset="100%" stopColor="#fbbf24" stopOpacity={0.6} />
+                                <stop offset="0%" stopColor="#6366f1" stopOpacity={0.95} />
+                                <stop offset="100%" stopColor="#a855f7" stopOpacity={0.6} />
                               </linearGradient>
                             </defs>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(100,116,139,0.1)" />
                             <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 600, fill: '#94a3b8' }} />
                             <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 600, fill: '#94a3b8' }} tickFormatter={v => `₹${(v / 1000).toFixed(0)}k`} />
                             <Tooltip
-                              cursor={{ fill: 'rgba(249,115,22,0.04)', radius: 8 }}
+                              cursor={{ fill: 'rgba(99,102,241,0.06)', radius: 8 }}
                               formatter={(v: number) => [`₹${v.toLocaleString('en-IN')}`, 'Revenue']}
-                              contentStyle={{ background: 'white', border: '1px solid #fed7aa', borderRadius: 12, fontSize: 12, boxShadow: '0 4px 16px rgba(0,0,0,0.08)', padding: '8px 12px' }}
+                              contentStyle={{ background: 'var(--card)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: 12, fontSize: 12, boxShadow: '0 4px 16px rgba(0,0,0,0.08)', padding: '8px 12px' }}
                             />
                             <Bar dataKey="revenue" fill="url(#barGrad)" radius={[6, 6, 2, 2]} />
                           </BarChart>
@@ -414,8 +418,8 @@ export default function AdminDashboard() {
                           <AreaChart data={dailyRevenue} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
                             <defs>
                               <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor="#f97316" stopOpacity={0.15} />
-                                <stop offset="100%" stopColor="#f97316" stopOpacity={0.01} />
+                                <stop offset="0%" stopColor="#6366f1" stopOpacity={0.15} />
+                                <stop offset="100%" stopColor="#6366f1" stopOpacity={0.01} />
                               </linearGradient>
                             </defs>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(100,116,139,0.1)" />
@@ -423,11 +427,11 @@ export default function AdminDashboard() {
                             <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 600, fill: '#94a3b8' }} tickFormatter={v => `₹${(v / 1000).toFixed(0)}k`} />
                             <Tooltip
                               formatter={(v: number) => [`₹${v.toLocaleString('en-IN')}`, 'Revenue']}
-                              contentStyle={{ background: 'white', border: '1px solid #fed7aa', borderRadius: 12, fontSize: 12, boxShadow: '0 4px 16px rgba(0,0,0,0.08)', padding: '8px 12px' }}
+                              contentStyle={{ background: 'var(--card)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: 12, fontSize: 12, boxShadow: '0 4px 16px rgba(0,0,0,0.08)', padding: '8px 12px' }}
                             />
-                            <Area type="monotone" dataKey="revenue" stroke="#f97316" strokeWidth={2.5}
-                              dot={{ fill: '#f97316', r: 3, strokeWidth: 0 }}
-                              activeDot={{ r: 5, strokeWidth: 0, fill: '#f97316' }}
+                            <Area type="monotone" dataKey="revenue" stroke="#6366f1" strokeWidth={2.5}
+                              dot={{ fill: '#6366f1', r: 3, strokeWidth: 0 }}
+                              activeDot={{ r: 5, strokeWidth: 0, fill: '#6366f1' }}
                               fill="url(#areaGrad)" />
                           </AreaChart>
                         )}
@@ -439,9 +443,16 @@ export default function AdminDashboard() {
             </motion.div>
 
             {/* Staff Efficiency */}
-            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
-              <Card className="bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/50 rounded-2xl shadow-sm">
-                <CardHeader className="px-5 pt-5 pb-3">
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{
+                duration: 0.6,
+                delay: 0.2,
+                ease: [0.23, 1, 0.32, 1]
+              }}>
+              <Card className="bg-white dark:bg-[#1C1D21] border border-slate-200/60 dark:border-white/5 rounded-2xl shadow-sm">
+                <CardHeader className="px-6 pt-6 pb-3">
                   <div className="flex items-center justify-between">
                     <div>
                       <CardTitle className="text-sm font-semibold text-slate-800 dark:text-white">Staff Efficiency</CardTitle>
@@ -494,7 +505,7 @@ export default function AdminDashboard() {
                                 initial={{ width: 0 }}
                                 animate={{ width: `${pct}%` }}
                                 transition={{ duration: 0.8, ease: 'easeOut', delay: index * 0.05 }}
-                                className="h-full bg-gradient-to-r from-orange-400 to-amber-500 rounded-full"
+                                className="h-full bg-gradient-to-r from-orange-500 to-amber-600 rounded-full"
                               />
                             </div>
                           </button>
@@ -508,9 +519,16 @@ export default function AdminDashboard() {
           </div>
 
           {/* ── Right: Live Sales Feed ───────────────────────────── */}
-          <motion.div initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
-            <Card className="bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/50 rounded-2xl shadow-sm h-full flex flex-col">
-              <CardHeader className="px-5 pt-5 pb-3 shrink-0 border-b border-slate-100 dark:border-slate-700/50">
+          <motion.div
+            initial={{ opacity: 0, x: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{
+              duration: 0.7,
+              delay: 0.2,
+              ease: [0.23, 1, 0.32, 1]
+            }}>
+            <Card className="bg-white dark:bg-[#1C1D21] border border-slate-200/60 dark:border-white/5 rounded-2xl shadow-sm h-full flex flex-col">
+              <CardHeader className="px-6 pt-6 pb-4 shrink-0 border-b border-slate-100 dark:border-white/5">
                 <div className="flex items-center justify-between">
                   <div>
                     <CardTitle className="text-sm font-semibold text-slate-800 dark:text-white flex items-center gap-2">
@@ -543,7 +561,7 @@ export default function AdminDashboard() {
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, height: 0 }}
                           transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                          className="flex items-center gap-3 px-5 py-3 border-b border-slate-50 dark:border-slate-700/30 last:border-0 hover:bg-slate-50/60 dark:hover:bg-slate-700/20 transition-colors">
+                          className="flex items-center gap-3 px-5 py-3 border-b border-slate-50 dark:border-white/5 last:border-0 hover:bg-slate-50/60 dark:hover:bg-slate-700/20 transition-colors">
                           {/* Icon */}
                           <div className="h-8 w-8 rounded-xl bg-orange-50 dark:bg-orange-500/10 flex items-center justify-center shrink-0">
                             <Package className="h-4 w-4 text-orange-500" />
@@ -578,9 +596,9 @@ export default function AdminDashboard() {
                 )}
 
                 {/* Footer link */}
-                <div className="px-5 py-3 border-t border-slate-100 dark:border-slate-700/50 shrink-0">
+                <div className="px-5 py-3 border-t border-slate-100 dark:border-white/5 shrink-0">
                   <button
-                    onClick={() => window.location.href = '/admin/billing-history'}
+                    onClick={() => window.location.href = '/admin/history'}
                     className="w-full text-center text-xs font-semibold text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 transition-colors py-0.5">
                     View full history →
                   </button>

@@ -112,34 +112,13 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800">
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-[#F7F7F9] dark:bg-[#0B0C10]">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
         {/* Gradient Orbs */}
-        <motion.div
-          animate={{
-            scale: [1, 1.2, 1],
-            rotate: [0, 90, 0],
-          }}
-          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-          className="absolute -top-20 -left-20 w-96 h-96 bg-gradient-to-br from-orange-400/30 to-pink-400/30 rounded-full blur-3xl"
-        />
-        <motion.div
-          animate={{
-            scale: [1, 1.3, 1],
-            rotate: [0, -90, 0],
-          }}
-          transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-          className="absolute top-1/2 -right-20 w-[30rem] h-[30rem] bg-gradient-to-bl from-amber-400/30 to-orange-500/30 rounded-full blur-3xl"
-        />
-        <motion.div
-          animate={{
-            scale: [1, 1.1, 1],
-            rotate: [0, 45, 0],
-          }}
-          transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-          className="absolute -bottom-20 left-1/3 w-80 h-80 bg-gradient-to-tr from-yellow-400/30 to-amber-400/30 rounded-full blur-3xl"
-        />
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-orange-500/20 dark:bg-orange-600/10 blur-[120px] rounded-full animate-pulse" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-amber-500/20 dark:bg-amber-600/10 blur-[120px] rounded-full animate-pulse delay-700" />
+        <div className="absolute top-[20%] right-[10%] w-[20%] h-[20%] bg-orange-400/10 blur-[80px] rounded-full animate-bounce duration-[10s]" />
       </div>
 
       {/* Floating Snack Icons */}
@@ -182,24 +161,27 @@ export default function LoginPage() {
             <div>
               <motion.div
                 whileHover={{ scale: 1.05 }}
-                className="inline-flex items-center gap-3 mb-6"
+                className="inline-flex flex-col items-start gap-3 mb-6"
               >
-                <div className="h-16 w-16 rounded-2xl bg-white flex items-center justify-center shadow-2xl shadow-orange-500/50 rotate-3 overflow-hidden">
-                  <img src="/logo.png" alt="Logo" className="w-12 h-12 object-contain" />
-                </div>
+                <motion.div
+                  layoutId="logo"
+                  className="h-16 w-16 rounded-[2rem] bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center mb-6 shadow-2xl shadow-orange-500/20"
+                >
+                  <ChefHat className="h-8 w-8 text-white" />
+                </motion.div>
                 <div>
-                  <h1 className="text-5xl font-black bg-gradient-to-r from-orange-600 via-amber-600 to-orange-500 bg-clip-text text-transparent">
+                  <h1 className="text-5xl font-black text-slate-900 dark:text-white tracking-tight">
                     Vaishali
                   </h1>
-                  <p className="text-xl font-bold text-orange-600/80">Vadapav & Snacks</p>
+                  <p className="text-xl font-bold bg-gradient-to-r from-orange-500 to-amber-600 bg-clip-text text-transparent">Vadapav & Snacks</p>
                 </div>
               </motion.div>
 
               <h2 className="text-4xl font-bold text-slate-800 dark:text-white mb-4 leading-tight">
                 Welcome to Your
                 <br />
-                <span className="bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
-                  Vaishali Snack Center
+                <span className="bg-gradient-to-r from-orange-500 to-amber-600 bg-clip-text text-transparent">
+                  Business HQ
                 </span>
               </h2>
 
@@ -210,7 +192,7 @@ export default function LoginPage() {
 
             <div className="flex flex-wrap gap-6">
               <div className="flex items-center gap-3">
-                <div className="h-12 w-12 rounded-xl bg-orange-100 dark:bg-orange-500/10 flex items-center justify-center">
+                <div className="h-12 w-12 rounded-xl bg-orange-50 dark:bg-orange-500/10 flex items-center justify-center">
                   <Sparkles className="h-6 w-6 text-orange-600 dark:text-orange-400" />
                 </div>
                 <div>
@@ -220,7 +202,7 @@ export default function LoginPage() {
               </div>
 
               <div className="flex items-center gap-3">
-                <div className="h-12 w-12 rounded-xl bg-amber-100 dark:bg-amber-500/10 flex items-center justify-center">
+                <div className="h-12 w-12 rounded-xl bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center">
                   <Lock className="h-6 w-6 text-amber-600 dark:text-amber-400" />
                 </div>
                 <div>
@@ -239,15 +221,15 @@ export default function LoginPage() {
           >
             {/* Mobile Header */}
             <div className="lg:hidden flex flex-col items-center mb-8">
-              <div className="h-20 w-20 rounded-3xl bg-white flex items-center justify-center shadow-2xl shadow-orange-500/50 mb-4 rotate-3 overflow-hidden">
+              <div className="h-20 w-20 rounded-3xl bg-white dark:bg-[#1C1D21] border border-slate-200/50 dark:border-white/5 flex items-center justify-center shadow-xl shadow-orange-500/10 mb-4 overflow-hidden">
                 <img src="/logo.png" alt="Logo" className="w-16 h-16 object-contain" />
               </div>
-              <h1 className="text-4xl font-black bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent text-center">
+              <h1 className="text-4xl font-black text-slate-900 dark:text-white text-center tracking-tight">
                 Vaishali Snacks
               </h1>
             </div>
 
-            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl border border-orange-200/50 dark:border-slate-700/50 rounded-3xl p-8 shadow-2xl">
+            <div className="bg-white/80 dark:bg-[#1C1D21]/80 backdrop-blur-3xl border border-slate-200/50 dark:border-white/5 rounded-3xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)]">
               <div className="mb-6">
                 <h3 className="text-2xl font-bold text-slate-800 dark:text-white mb-2 flex items-center gap-2">
                   <span className="h-2 w-2 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 animate-pulse" />
@@ -271,7 +253,7 @@ export default function LoginPage() {
                       placeholder="Enter your username"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
-                      className="h-12 pl-12 bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
+                      className="h-12 pl-12 bg-white dark:bg-slate-900 border-slate-200 dark:border-white/5 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all shadow-sm"
                       autoComplete="username"
                       disabled={isSubmitting}
                     />
@@ -357,7 +339,7 @@ export default function LoginPage() {
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="h-12 pl-12 bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
+                      className="h-12 pl-12 bg-white dark:bg-slate-900 border-slate-200 dark:border-white/5 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all shadow-sm"
                       autoComplete="current-password"
                       disabled={isSubmitting}
                     />
@@ -366,18 +348,16 @@ export default function LoginPage() {
 
                 <Button
                   type="submit"
-                  className="w-full h-12 rounded-xl bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-bold text-base transition-all shadow-lg shadow-orange-500/30 hover:shadow-xl hover:shadow-orange-500/40 active:scale-[0.98] group/btn"
                   disabled={isSubmitting}
+                  className="w-full h-14 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-black uppercase tracking-[0.2em] text-xs shadow-xl shadow-orange-500/25 transition-all active:scale-[0.98] disabled:opacity-70 group overflow-hidden relative"
                 >
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                   {isSubmitting ? (
-                    <div className="flex items-center gap-2">
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                      <span>Signing in...</span>
-                    </div>
+                    <Loader2 className="h-5 w-5 animate-spin mx-auto" />
                   ) : (
                     <div className="flex items-center justify-center gap-2">
-                      <span>Sign In</span>
-                      <ArrowRight className="h-5 w-5 group-hover/btn:translate-x-1 transition-transform" />
+                      Sign In
+                      <ArrowLeft className="h-4 w-4 rotate-180 group-hover:translate-x-1 transition-transform" />
                     </div>
                   )}
                 </Button>

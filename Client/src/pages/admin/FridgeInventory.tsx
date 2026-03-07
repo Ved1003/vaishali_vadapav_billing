@@ -28,7 +28,8 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import {
     Plus, Pencil, RefreshCw, PackagePlus,
-    Search, Snowflake, Eye, EyeOff, ArrowUpDown, X
+    Search, Snowflake, Eye, EyeOff, ArrowUpDown, X,
+    Refrigerator, HardDrive
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -136,18 +137,20 @@ export default function FridgeInventory() {
             });
     }, [items, searchQuery, view, sortBy]);
 
-    const stats = {
-        total: items.filter(i => i.isActive).length,
-        lowStock: items.filter(i => i.isActive && i.stock <= 5 && i.stock > 0).length,
-        outOfStock: items.filter(i => i.isActive && i.stock === 0).length,
-        totalUnits: items.reduce((acc, i) => acc + (i.isActive ? i.stock : 0), 0)
-    };
+    const activeItems = useMemo(() => items.filter(i => i.isActive), [items]);
+
+    const stats = useMemo(() => ({
+        total: activeItems.length,
+        lowStock: activeItems.filter(i => i.stock <= 5 && i.stock > 0).length,
+        outOfStock: activeItems.filter(i => i.stock === 0).length,
+        totalUnits: activeItems.reduce((acc, i) => acc + i.stock, 0)
+    }), [activeItems]);
 
     if (isLoading) {
         return (
-            <div className="h-full flex items-center justify-center p-8 bg-slate-50 dark:bg-slate-950">
+            <div className="h-full flex items-center justify-center p-8 bg-[#F7F7F9] dark:bg-[#0B0C10]">
                 <div className="flex flex-col items-center gap-4">
-                    <div className="h-10 w-10 rounded-full border-4 border-slate-200 dark:border-slate-800 border-t-blue-600 animate-spin"></div>
+                    <div className="h-10 w-10 rounded-full border-4 border-slate-200 dark:border-slate-800 border-t-sky-600 animate-spin"></div>
                     <p className="text-slate-500 font-bold uppercase text-[10px] tracking-widest text-center">Syncing Fridge<br />Storage...</p>
                 </div>
             </div>
@@ -155,11 +158,11 @@ export default function FridgeInventory() {
     }
 
     return (
-        <div className="flex flex-col h-full bg-slate-50 dark:bg-slate-950 overflow-hidden">
+        <div className="flex flex-col h-full bg-[#F7F7F9] dark:bg-[#0B0C10] overflow-hidden">
             {/* ── Page Header ────────────────────────────────────────────── */}
-            <div className="shrink-0 px-6 py-5 border-b border-slate-200 dark:border-slate-900 bg-white dark:bg-slate-900 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="shrink-0 px-6 py-5 border-b border-slate-200/50 dark:border-white/5 bg-white dark:bg-[#1C1D21] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-xl bg-blue-50 dark:bg-blue-950/30 flex items-center justify-center text-blue-600 shadow-inner">
+                    <div className="h-10 w-10 rounded-xl bg-sky-50 dark:bg-sky-950/30 flex items-center justify-center text-sky-600 shadow-inner">
                         <Snowflake className="h-5 w-5" />
                     </div>
                     <div>
@@ -181,7 +184,7 @@ export default function FridgeInventory() {
                             setFormData({ name: '', price: '', stock: '' });
                             setIsDialogOpen(true);
                         }}
-                        className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/10 h-10 px-5 font-bold uppercase text-[11px] tracking-widest"
+                        className="rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 text-white shadow-lg shadow-sky-500/20 h-10 px-5 font-bold uppercase text-[11px] tracking-widest"
                     >
                         <Plus className="h-4 w-4 mr-2" />
                         Add Cold Item
@@ -191,30 +194,35 @@ export default function FridgeInventory() {
 
             {/* ── Stats Strip ───────────────────────────────────────────── */}
             <div className="shrink-0 px-6 py-4 bg-white/50 dark:bg-slate-900/30 border-b border-slate-100 dark:border-slate-900 overflow-x-auto no-scrollbar">
-                <div className="flex items-center gap-6 min-w-max">
+                <div className="shrink-0 p-6 pb-2 grid grid-cols-2 md:grid-cols-4 gap-4">
                     {[
-                        { label: 'Total items', value: stats.total, color: 'text-blue-600' },
-                        { label: 'Low Stock', value: stats.lowStock, color: 'text-amber-500' },
-                        { label: 'Out of stock', value: stats.outOfStock, color: 'text-red-500' },
-                        { label: 'Total units', value: stats.totalUnits, color: 'text-slate-900 dark:text-white' },
+                        { label: 'Inside Storage', value: activeItems.length, icon: Refrigerator, color: 'text-sky-600 dark:text-sky-400', bg: 'bg-sky-50 dark:bg-sky-500/10' },
+                        { label: 'Out of Stock', value: sortedItems.filter(i => i.stock === 0).length, icon: Snowflake, color: 'text-rose-600', bg: 'bg-rose-50 dark:bg-rose-500/10' },
+                        { label: 'Low Levels', value: sortedItems.filter(i => i.stock > 0 && i.stock <= 5).length, icon: PackagePlus, color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-500/10' },
+                        { label: 'Active Value', value: `₹${Math.round(activeItems.reduce((acc, i) => acc + (i.price * i.stock), 0)).toLocaleString()}`, icon: HardDrive, color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-500/10' },
                     ].map((stat, i) => (
-                        <div key={i} className="flex flex-col">
-                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{stat.label}</span>
-                            <span className={cn("text-lg font-black leading-none", stat.color)}>{stat.value}</span>
+                        <div key={i} className="flex items-center gap-3">
+                            <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center", stat.bg)}>
+                                <stat.icon className={cn("h-4 w-4", stat.color)} />
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{stat.label}</span>
+                                <span className={cn("text-lg font-black leading-none", stat.color)}>{stat.value}</span>
+                            </div>
                         </div>
                     ))}
                 </div>
             </div>
 
             {/* ── Toolbar & Filters ───────────────────────────────────────── */}
-            <div className="shrink-0 px-6 py-3 border-b border-slate-100 dark:border-slate-900 bg-white dark:bg-slate-900/50 flex flex-col md:flex-row items-center gap-3">
+            <div className="shrink-0 px-6 py-3 border-b border-slate-100 dark:border-white/5 bg-white dark:bg-[#1C1D21] flex flex-col md:flex-row items-center gap-3">
                 <div className="relative flex-1 w-full group">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-sky-500 transition-colors" />
                     <Input
                         placeholder="Search cold storage..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-10 h-10 rounded-xl bg-slate-100/50 dark:bg-slate-950 border-none shadow-none focus-visible:ring-2 focus-visible:ring-blue-500 font-bold text-sm"
+                        className="pl-10 h-10 rounded-xl bg-slate-50 dark:bg-[#0B0C10] border-none shadow-none focus-visible:ring-2 focus-visible:ring-sky-500/20 font-bold text-sm"
                     />
                 </div>
 
@@ -226,7 +234,7 @@ export default function FridgeInventory() {
                             onClick={() => setView('active')}
                             className={cn(
                                 "h-8 px-4 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
-                                view === 'active' ? "bg-white dark:bg-slate-800 text-blue-600 shadow-sm" : "text-slate-400"
+                                view === 'active' ? "bg-white dark:bg-slate-800 text-sky-600 shadow-sm" : "text-slate-400"
                             )}
                         > Active </Button>
                         <Button
@@ -241,8 +249,8 @@ export default function FridgeInventory() {
                     </div>
 
                     <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
-                        <SelectTrigger className="w-full sm:w-[130px] h-10 rounded-xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 font-bold text-xs">
-                            <ArrowUpDown className="h-3.5 w-3.5 mr-2 text-blue-500" />
+                        <SelectTrigger className="w-full sm:w-[130px] h-10 rounded-xl border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B0C10] font-bold text-xs shadow-sm">
+                            <ArrowUpDown className="h-3.5 w-3.5 mr-2 text-sky-500" />
                             <SelectValue placeholder="Sort" />
                         </SelectTrigger>
                         <SelectContent className="rounded-xl border-slate-200 dark:border-slate-800">
@@ -264,9 +272,9 @@ export default function FridgeInventory() {
                                     key="empty"
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
-                                    className="col-span-full py-20 text-center bg-white dark:bg-slate-900/50 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800"
+                                    className="col-span-full py-20 text-center bg-white dark:bg-[#1C1D21] rounded-[2rem] border-2 border-dashed border-sky-100 dark:border-white/5"
                                 >
-                                    <Snowflake className="h-10 w-10 text-slate-300 mx-auto mb-3" />
+                                    <Snowflake className="h-10 w-10 text-sky-200/50 mx-auto mb-3" />
                                     <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider">Storage is empty</h3>
                                     <p className="text-xs text-slate-500 mt-1">Try adjusting your filters or search query</p>
                                 </motion.div>
@@ -286,16 +294,16 @@ export default function FridgeInventory() {
                                         >
                                             <Card
                                                 className={cn(
-                                                    "group h-full relative border flex flex-col transition-all duration-300 rounded-[1.25rem] overflow-hidden bg-white dark:bg-slate-900",
-                                                    isOut ? "border-red-100 dark:border-red-900/30" : isLow ? "border-amber-100 dark:border-amber-900/30" : "border-slate-100 dark:border-slate-800 hover:border-blue-200 dark:hover:border-blue-900/50",
-                                                    !item.isActive && "grayscale bg-slate-50/50 dark:bg-slate-950/50 opacity-80"
+                                                    "group h-full relative border transition-all duration-300 rounded-[1.5rem] overflow-hidden bg-white dark:bg-[#1C1D21]",
+                                                    isOut ? "border-red-100 dark:border-red-900/30" : isLow ? "border-amber-100 dark:border-amber-900/30" : "border-slate-200/50 dark:border-white/5 hover:border-sky-400 dark:hover:border-sky-500/50 hover:shadow-xl hover:shadow-sky-500/5",
+                                                    !item.isActive && "grayscale bg-slate-50/50 dark:bg-[#0B0C10] opacity-80"
                                                 )}
                                             >
                                                 <div className="p-4 flex flex-col h-full">
                                                     <div className="flex items-start justify-between mb-3">
                                                         <div className={cn(
                                                             "h-9 w-9 rounded-lg flex items-center justify-center transition-colors shadow-sm",
-                                                            isOut ? "bg-red-50 dark:bg-red-950/30 text-red-600" : isLow ? "bg-amber-50 dark:bg-amber-950/30 text-amber-600" : "bg-blue-50 dark:bg-blue-950/30 text-blue-600"
+                                                            isOut ? "bg-red-50 dark:bg-red-950/30 text-red-600" : isLow ? "bg-amber-50 dark:bg-amber-950/30 text-amber-600" : "bg-sky-50 dark:bg-sky-950/30 text-sky-600"
                                                         )}>
                                                             <Snowflake className="h-4.5 w-4.5" />
                                                         </div>
@@ -308,7 +316,7 @@ export default function FridgeInventory() {
                                                                     setFormData({ name: item.name, price: String(item.price), stock: String(item.stock) });
                                                                     setIsDialogOpen(true);
                                                                 }}
-                                                                className="h-8 w-8 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-blue-500"
+                                                                className="h-8 w-8 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-sky-500"
                                                             >
                                                                 <Pencil className="h-3.5 w-3.5" />
                                                             </Button>
@@ -316,7 +324,7 @@ export default function FridgeInventory() {
                                                                 variant="ghost"
                                                                 size="icon"
                                                                 onClick={() => toggleArchive(item)}
-                                                                className="h-8 w-8 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-red-500"
+                                                                className="h-8 w-8 rounded-lg bg-slate-50 dark:bg-[#0B0C10] text-slate-400 hover:text-red-500"
                                                             >
                                                                 {item.isActive ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                                                             </Button>
@@ -343,7 +351,7 @@ export default function FridgeInventory() {
                                                                     animate={{ width: `${Math.min((item.stock / 20) * 100, 100)}%` }}
                                                                     className={cn(
                                                                         "h-full rounded-full",
-                                                                        isOut ? "bg-red-500" : isLow ? "bg-amber-500" : "bg-blue-600"
+                                                                        isOut ? "bg-red-500" : isLow ? "bg-amber-500" : "bg-sky-600"
                                                                     )}
                                                                 />
                                                             </div>
@@ -351,7 +359,7 @@ export default function FridgeInventory() {
                                                                 <span className="text-[11px] font-black text-slate-900 dark:text-white tabular-nums">
                                                                     {item.stock} <span className="text-slate-400 font-bold ml-0.5">Units</span>
                                                                 </span>
-                                                                <span className="text-[11px] font-black text-blue-600 dark:text-blue-400 tabular-nums">
+                                                                <span className="text-[11px] font-black text-sky-600 dark:text-sky-400 tabular-nums">
                                                                     ₹{item.price}
                                                                 </span>
                                                             </div>
@@ -367,7 +375,7 @@ export default function FridgeInventory() {
                                                             "mt-4 w-full h-9 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all",
                                                             isOut
                                                                 ? "bg-red-600 hover:bg-red-700 text-white shadow-red-500/20 shadow-lg"
-                                                                : "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-600 hover:text-white"
+                                                                : "bg-sky-50 dark:bg-sky-900/20 text-sky-600 dark:text-sky-400 hover:bg-sky-600 hover:text-white shadow-sky-500/5 hover:shadow-lg"
                                                         )}
                                                     >
                                                         <PackagePlus className="h-3.5 w-3.5 mr-2" />
@@ -386,11 +394,11 @@ export default function FridgeInventory() {
 
             {/* ── Add/Edit Dialog ─────────────────────────────────────────── */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent className="max-w-md rounded-[1.5rem] border-none shadow-2xl bg-white dark:bg-slate-900 p-0 overflow-hidden">
-                    <div className="px-8 pt-8 pb-6">
-                        <DialogHeader className="mb-8">
+                <DialogContent className="max-w-md rounded-[2rem] border-none shadow-2xl bg-white dark:bg-[#1C1D21] p-0 overflow-hidden">
+                    <div className="px-8 pt-8 pb-8">
+                        <DialogHeader className="mb-6">
                             <div className="flex items-center gap-4">
-                                <div className="h-12 w-12 rounded-xl bg-blue-50 dark:bg-blue-950/30 flex items-center justify-center text-blue-600">
+                                <div className="h-12 w-12 rounded-[1.25rem] bg-gradient-to-br from-sky-500 to-indigo-600 flex items-center justify-center text-white shadow-xl shadow-sky-500/20">
                                     {editingItem ? <Pencil className="h-6 w-6" /> : <Plus className="h-6 w-6" />}
                                 </div>
                                 <div>
@@ -411,20 +419,20 @@ export default function FridgeInventory() {
                                     placeholder="e.g. Diet Coke 300ml"
                                     value={formData.name}
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    className="h-11 rounded-xl bg-slate-100/50 dark:bg-slate-950 border-none px-4 font-bold text-sm"
+                                    className="h-11 rounded-xl bg-slate-100/50 dark:bg-[#0B0C10] border-none px-4 font-bold text-sm"
                                 />
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Price</Label>
-                                    <div className="relative">
-                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-600 font-black text-sm">₹</span>
+                                    <div className="relative group">
+                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sky-600 font-black text-sm group-focus-within:scale-110 transition-transform">₹</span>
                                         <Input
                                             type="number"
                                             value={formData.price}
                                             onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                                            className="h-11 pl-8 rounded-xl bg-slate-100/50 dark:bg-slate-950 border-none px-4 font-black text-sm"
+                                            className="h-11 pl-10 rounded-xl bg-slate-100/50 dark:bg-[#0B0C10] border-none font-black text-sm focus-visible:ring-2 focus-visible:ring-sky-500/20"
                                         />
                                     </div>
                                 </div>
@@ -434,7 +442,7 @@ export default function FridgeInventory() {
                                         type="number"
                                         value={formData.stock}
                                         onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-                                        className="h-11 rounded-xl bg-slate-100/50 dark:bg-slate-950 border-none px-4 font-black text-sm"
+                                        className="h-11 rounded-xl bg-slate-100/50 dark:bg-[#0B0C10] border-none px-4 font-black text-sm"
                                     />
                                 </div>
                             </div>
@@ -450,7 +458,7 @@ export default function FridgeInventory() {
                                 </Button>
                                 <Button
                                     type="submit"
-                                    className="flex-1 h-11 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-widest text-[11px] shadow-lg shadow-blue-500/20"
+                                    className="flex-1 h-11 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-black uppercase tracking-widest text-[11px] shadow-lg shadow-sky-500/20"
                                 >
                                     {editingItem ? 'Update Item' : 'Create Item'}
                                 </Button>
@@ -462,11 +470,11 @@ export default function FridgeInventory() {
 
             {/* ── Restock Dialog ─────────────────────────────────────────── */}
             <Dialog open={isRestockOpen} onOpenChange={setIsRestockOpen}>
-                <DialogContent className="max-w-sm rounded-[1.5rem] border-none shadow-2xl bg-white dark:bg-slate-900 p-0 overflow-hidden">
-                    <div className="px-8 pt-8 pb-6">
+                <DialogContent className="max-w-sm rounded-[2rem] border-none shadow-2xl bg-white dark:bg-[#1C1D21] p-0 overflow-hidden">
+                    <div className="px-8 pt-8 pb-8">
                         <DialogHeader className="mb-6">
                             <div className="flex items-center gap-4">
-                                <div className="h-12 w-12 rounded-xl bg-blue-50 dark:bg-blue-950/30 flex items-center justify-center text-blue-600">
+                                <div className="h-12 w-12 rounded-[1.25rem] bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center text-white shadow-xl shadow-sky-500/20">
                                     <PackagePlus className="h-6 w-6" />
                                 </div>
                                 <div>
@@ -489,13 +497,13 @@ export default function FridgeInventory() {
                                     placeholder="0"
                                     value={restockAmount}
                                     onChange={(e) => setRestockAmount(e.target.value)}
-                                    className="h-14 rounded-xl bg-slate-100/50 dark:bg-slate-950 border-none px-6 font-black text-2xl text-center"
+                                    className="h-14 rounded-xl bg-slate-100/50 dark:bg-[#0B0C10] border-none px-6 font-black text-2xl text-center"
                                 />
                             </div>
                             <Button
                                 type="submit"
                                 disabled={!restockAmount || parseInt(restockAmount) <= 0}
-                                className="w-full h-12 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-widest text-[11px] shadow-lg shadow-blue-500/20"
+                                className="w-full h-12 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 text-white font-black uppercase tracking-widest text-[11px] shadow-lg shadow-sky-500/20"
                             >
                                 Confirm Restock
                             </Button>

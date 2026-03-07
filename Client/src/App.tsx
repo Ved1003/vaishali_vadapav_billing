@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+import { LazyMotion, domAnimation } from "framer-motion";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -45,44 +46,46 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="light" storageKey="restaurant-theme">
         <AuthProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-              <Suspense fallback={<LoadingFallback />}>
-                <Routes>
-                  <Route path="/" element={<Navigate to="/login" replace />} />
-                  <Route path="/login" element={<LoginPage />} />
+          <LazyMotion features={domAnimation}>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                <Suspense fallback={<LoadingFallback />}>
+                  <Routes>
+                    <Route path="/" element={<Navigate to="/login" replace />} />
+                    <Route path="/login" element={<LoginPage />} />
 
-                  {/* Admin Routes */}
-                  <Route path="/admin" element={
-                    <ProtectedRoute allowedRoles={['ADMIN']}>
-                      <AdminLayout />
-                    </ProtectedRoute>
-                  }>
-                    <Route index element={<AdminDashboard />} />
-                    <Route path="dashboard" element={<Navigate to="/admin" replace />} />
-                    <Route path="items" element={<ManageItems />} />
-                    <Route path="users" element={<ManageUsers />} />
-                    <Route path="history" element={<BillingHistory />} />
-                    <Route path="fridge" element={<FridgeInventory />} />
-                  </Route>
+                    {/* Admin Routes */}
+                    <Route path="/admin" element={
+                      <ProtectedRoute allowedRoles={['ADMIN']}>
+                        <AdminLayout />
+                      </ProtectedRoute>
+                    }>
+                      <Route index element={<AdminDashboard />} />
+                      <Route path="dashboard" element={<Navigate to="/admin" replace />} />
+                      <Route path="items" element={<ManageItems />} />
+                      <Route path="users" element={<ManageUsers />} />
+                      <Route path="history" element={<BillingHistory />} />
+                      <Route path="fridge" element={<FridgeInventory />} />
+                    </Route>
 
-                  {/* Biller Routes */}
-                  <Route path="/billing" element={
-                    <ProtectedRoute allowedRoles={['BILLER']}>
-                      <BillerLayout />
-                    </ProtectedRoute>
-                  }>
-                    <Route index element={<BillingScreen />} />
-                    <Route path="dashboard" element={<Navigate to="/billing" replace />} />
-                  </Route>
+                    {/* Biller Routes */}
+                    <Route path="/billing" element={
+                      <ProtectedRoute allowedRoles={['BILLER']}>
+                        <BillerLayout />
+                      </ProtectedRoute>
+                    }>
+                      <Route index element={<BillingScreen />} />
+                      <Route path="dashboard" element={<Navigate to="/billing" replace />} />
+                    </Route>
 
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </Suspense>
-            </BrowserRouter>
-          </TooltipProvider>
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </Suspense>
+              </BrowserRouter>
+            </TooltipProvider>
+          </LazyMotion>
         </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>

@@ -196,29 +196,29 @@ export default function BillingHistory() {
 
   if (isLoading && bills.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-amber-50 dark:from-slate-950 dark:to-slate-900">
+      <div className="min-h-screen flex items-center justify-center bg-[#F7F7F9] dark:bg-[#0B0C10]">
         <div className="flex flex-col items-center gap-4">
-          <div className="h-16 w-16 rounded-full border-4 border-orange-200 dark:border-orange-900 border-t-orange-600 dark:border-t-orange-400 animate-spin"></div>
-          <p className="text-slate-600 dark:text-slate-400 font-semibold animate-pulse">Loading History...</p>
+          <div className="h-16 w-16 rounded-full border-4 border-slate-200 dark:border-slate-800 border-t-orange-600 animate-spin"></div>
+          <p className="text-slate-500 font-bold uppercase text-[10px] tracking-widest text-center animate-pulse">Loading History...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-full bg-gradient-to-br from-orange-50/30 via-amber-50/20 to-yellow-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-slate-900 p-4">
-      <div className="max-w-[1400px] mx-auto space-y-4">
+    <div className="min-h-full bg-[#F7F7F9] dark:bg-[#0B0C10] p-4 md:p-6">
+      <div className="max-w-[1400px] mx-auto space-y-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center shadow-md">
-              <Receipt className="h-5 w-5 text-white" />
+            <div className="h-12 w-12 rounded-[1.25rem] bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center shadow-xl shadow-orange-500/20">
+              <Receipt className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-black bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
+              <h1 className="text-2xl font-black text-slate-900 dark:text-white leading-none tracking-tight uppercase">
                 Billing History
               </h1>
-              <p className="text-slate-600 dark:text-slate-400 text-xs font-medium">Archive of all past transactions</p>
+              <p className="text-[10px] font-black text-slate-400 mt-1.5 uppercase tracking-widest">Archive of all past transactions</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -226,51 +226,54 @@ export default function BillingHistory() {
               variant="outline"
               size="sm"
               onClick={() => setShowFilters(!showFilters)}
-              className={cn("rounded-xl h-10 px-4 border-orange-200 hover:border-orange-400 transition-all", showFilters && "bg-orange-600 text-white hover:bg-orange-700")}
+              className={cn(
+                "rounded-xl h-11 px-6 border-slate-200 dark:border-white/5 bg-white dark:bg-[#1C1D21] font-black uppercase text-[10px] tracking-widest transition-all shadow-sm",
+                showFilters && "bg-slate-900 text-white border-slate-900"
+              )}
             >
-              <Filter className={cn("h-3.5 w-3.5 mr-2", showFilters ? "text-white" : "text-orange-600")} />
+              <Filter className={cn("h-4 w-4 mr-2", showFilters ? "text-white" : "text-orange-500")} />
               {showFilters ? 'Hide Filters' : 'Filters'}
             </Button>
           </div>
         </div>
 
         {/* Stats Section */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="rounded-2xl border-2 border-white/50 dark:border-slate-700/50 shadow-md bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
-            <CardContent className="p-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Card className="rounded-[2rem] border-none shadow-xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-[#1C1D21] p-0 overflow-hidden group">
+            <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Volume</p>
-                  <p className="text-xl font-black text-slate-800 dark:text-white mt-1">₹{totalAmount.toLocaleString('en-IN')}</p>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Volume</p>
+                  <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">₹{totalAmount.toLocaleString('en-IN')}</p>
                 </div>
-                <div className="h-10 w-10 rounded-xl bg-orange-100 dark:bg-orange-500/10 flex items-center justify-center">
-                  <IndianRupee className="h-5 w-5 text-orange-600" />
+                <div className="h-10 w-10 rounded-xl bg-orange-100 dark:bg-orange-500/20 flex items-center justify-center">
+                  <Receipt className="h-5 w-5 text-orange-600 dark:text-orange-400" />
                 </div>
               </div>
             </CardContent>
           </Card>
-          <Card className="rounded-2xl border-2 border-white/50 dark:border-slate-700/50 shadow-md bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
-            <CardContent className="p-4">
+          <Card className="rounded-[2rem] border-none shadow-xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-[#1C1D21] p-0 overflow-hidden group">
+            <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Invoices</p>
-                  <p className="text-xl font-black text-slate-800 dark:text-white mt-1">{totalBills}</p>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Invoices</p>
+                  <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">{totalBills}</p>
                 </div>
-                <div className="h-10 w-10 rounded-xl bg-blue-100 dark:bg-blue-500/10 flex items-center justify-center">
-                  <FileText className="h-5 w-5 text-blue-600" />
+                <div className="h-12 w-12 rounded-2xl bg-amber-50 dark:bg-amber-950/30 flex items-center justify-center shadow-inner">
+                  <FileText className="h-6 w-6 text-amber-600" />
                 </div>
               </div>
             </CardContent>
           </Card>
-          <Card className="rounded-2xl border-2 border-white/50 dark:border-slate-700/50 shadow-md bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
-            <CardContent className="p-4">
+          <Card className="rounded-[2rem] border-none shadow-xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-[#1C1D21] p-0 overflow-hidden group">
+            <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Average Bill</p>
-                  <p className="text-xl font-black text-slate-800 dark:text-white mt-1">₹{averageBillAmount.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</p>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Average Bill</p>
+                  <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">₹{averageBillAmount.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</p>
                 </div>
-                <div className="h-10 w-10 rounded-xl bg-purple-100 dark:bg-purple-500/10 flex items-center justify-center">
-                  <Sparkles className="h-5 w-5 text-purple-600" />
+                <div className="h-12 w-12 rounded-2xl bg-fuchsia-50 dark:bg-fuchsia-950/30 flex items-center justify-center shadow-inner">
+                  <Sparkles className="h-6 w-6 text-fuchsia-600" />
                 </div>
               </div>
             </CardContent>
@@ -286,17 +289,17 @@ export default function BillingHistory() {
               exit={{ height: 0, opacity: 0 }}
               className="overflow-hidden"
             >
-              <Card className="rounded-2xl border-2 border-white/50 dark:border-slate-700/50 shadow-md bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
-                <CardContent className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="space-y-1.5">
+              <Card className="rounded-[2rem] border-none shadow-xl bg-white dark:bg-[#1C1D21] p-0 overflow-hidden">
+                <CardContent className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Date Range</Label>
-                    <div className="flex gap-1">
+                    <div className="flex gap-1 group">
                       <Select value={datePreset} onValueChange={(v) => handleDatePresetChange(v as DatePreset)}>
-                        <SelectTrigger className="h-10 rounded-xl border-orange-100 dark:border-slate-700 font-bold text-xs bg-white dark:bg-slate-900">
-                          <Calendar className="h-3.5 w-3.5 mr-2" />
+                        <SelectTrigger className="h-11 rounded-xl border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0B0C10] font-black text-xs">
+                          <Calendar className="h-4 w-4 mr-2 text-orange-500" />
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent className="rounded-xl">
+                        <SelectContent className="rounded-xl border-slate-200 dark:border-slate-800">
                           <SelectItem value="all">All Time</SelectItem>
                           <SelectItem value="today">Today</SelectItem>
                           <SelectItem value="monthly">This Month</SelectItem>
@@ -308,30 +311,30 @@ export default function BillingHistory() {
                   </div>
 
                   {datePreset === 'custom' && (
-                    <div className="flex items-center gap-2 mt-2">
+                    <div className="flex items-center gap-2">
                       <Input
                         type="date"
                         value={filters.startDate}
                         onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
-                        className="rounded-xl border-orange-100 h-10 flex-1 min-w-[130px] text-xs"
+                        className="rounded-xl border-slate-200 dark:border-slate-800 h-11 flex-1 min-w-[130px] font-black text-[11px] bg-slate-50 dark:bg-[#0B0C10]"
                       />
                       <span className="text-slate-400 text-[10px] font-black uppercase">to</span>
                       <Input
                         type="date"
                         value={filters.endDate}
                         onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
-                        className="rounded-xl border-orange-100 h-10 flex-1 min-w-[130px] text-xs"
+                        className="rounded-xl border-slate-200 dark:border-slate-800 h-11 flex-1 min-w-[130px] font-black text-[11px] bg-slate-50 dark:bg-[#0B0C10]"
                       />
                     </div>
                   )}
 
-                  <div className="space-y-1.5">
+                  <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Counter Staff</Label>
                     <Select value={filters.billerId || 'all'} onValueChange={(v) => setFilters({ ...filters, billerId: v === 'all' ? '' : v })}>
-                      <SelectTrigger className="h-10 rounded-xl border-orange-100 dark:border-slate-700 font-bold text-xs bg-white dark:bg-slate-900">
+                      <SelectTrigger className="h-11 rounded-xl border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0B0C10] font-black text-xs">
                         <SelectValue placeholder="All Staff" />
                       </SelectTrigger>
-                      <SelectContent className="rounded-xl">
+                      <SelectContent className="rounded-xl border-slate-200 dark:border-slate-800">
                         <SelectItem value="all">All Staff</SelectItem>
                         {billers.map(b => (
                           <SelectItem key={b.id} value={b.id || 'unknown'}>{b.name}</SelectItem>
@@ -340,7 +343,7 @@ export default function BillingHistory() {
                     </Select>
                   </div>
 
-                  <div className="space-y-1.5">
+                  <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Payment Mode</Label>
                     <div className="flex gap-2">
                       {['cash', 'upi'].map((mode) => (
@@ -350,8 +353,10 @@ export default function BillingHistory() {
                           size="sm"
                           onClick={() => setFilters({ ...filters, paymentMode: filters.paymentMode === mode ? '' : mode })}
                           className={cn(
-                            "flex-1 h-10 rounded-xl border-orange-100 dark:border-slate-700 capitalize font-bold text-xs",
-                            filters.paymentMode === mode ? "bg-orange-600 text-white border-orange-600" : "bg-white dark:bg-slate-900"
+                            "flex-1 h-11 rounded-xl border-none capitalize font-black text-[10px] tracking-widest transition-all",
+                            filters.paymentMode === mode
+                              ? "bg-slate-900 text-white shadow-lg"
+                              : "bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200"
                           )}
                         >
                           {mode}
@@ -360,22 +365,34 @@ export default function BillingHistory() {
                     </div>
                   </div>
 
-                  <div className="space-y-1.5">
+                  <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Contains Item</Label>
-                    <div className="relative">
+                    <div className="relative group">
                       <Input
                         placeholder="Search snack name..."
                         value={filters.itemSearch}
                         onChange={(e) => setFilters({ ...filters, itemSearch: e.target.value })}
-                        className="pl-10 h-10 rounded-xl border-orange-100 dark:border-slate-700 bg-white dark:bg-slate-900 font-bold text-xs"
+                        className="pl-10 h-11 rounded-xl border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0B0C10] font-bold text-xs"
                       />
-                      <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-orange-400" />
+                      <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-orange-500 transition-colors" />
                     </div>
                   </div>
 
-                  <div className="flex items-end gap-2">
-                    <Button onClick={applyFilters} className="flex-1 h-10 rounded-xl bg-slate-900 text-white font-black text-xs">APPLY FILTERS</Button>
-                    <Button onClick={clearFilters} variant="ghost" className="h-10 w-10 p-0 rounded-xl text-slate-400 hover:text-red-500"><X className="h-4 w-4" /></Button>
+                  <div className="flex items-end gap-3 md:col-span-2 lg:col-span-4 justify-end pt-4 border-t border-slate-100 dark:border-white/5">
+                    <Button
+                      onClick={clearFilters}
+                      variant="ghost"
+                      className="h-11 px-6 rounded-xl font-black text-[10px] tracking-widest text-slate-400 hover:text-red-500"
+                    >
+                      <X className="h-4 w-4 mr-2" />
+                      CLEAR ALL
+                    </Button>
+                    <Button
+                      onClick={applyFilters}
+                      className="h-11 px-8 rounded-xl bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-black text-[10px] tracking-widest shadow-lg shadow-orange-500/20"
+                    >
+                      APPLY FILTERS
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -384,35 +401,35 @@ export default function BillingHistory() {
         </AnimatePresence>
 
         {/* Main Records Table */}
-        <Card className="rounded-2xl border-2 border-white/50 dark:border-slate-700/50 shadow-2xl bg-white/90 dark:bg-slate-800/90 backdrop-blur-md overflow-hidden min-h-[500px]">
-          <CardHeader className="p-4 border-b border-orange-50/50">
+        <Card className="rounded-[2rem] border-none shadow-2xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-[#1C1D21] p-0 overflow-hidden min-h-[500px]">
+          <CardHeader className="p-6 border-b border-slate-100 dark:border-white/5">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-xl font-black text-slate-800 dark:text-white">Transaction Logs</CardTitle>
-                <p className="text-slate-500 font-medium text-sm">Archive of {filteredBills.length} valid bills</p>
+                <CardTitle className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Transaction Logs</CardTitle>
+                <p className="text-[10px] font-black text-slate-400 mt-1 uppercase tracking-widest">Archive of {filteredBills.length} valid bills</p>
               </div>
-              <div className="bg-orange-50 dark:bg-orange-500/10 px-4 py-2 rounded-xl border border-orange-100 border-dashed">
-                <p className="text-[9px] font-black text-orange-600/60 uppercase tracking-widest">Page Total</p>
-                <p className="text-xl font-black text-orange-600">₹{paginatedBills.reduce((s, b) => s + b.totalAmount, 0).toLocaleString('en-IN')}</p>
+              <div className="bg-orange-50 dark:bg-orange-950/30 px-5 py-3 rounded-2xl border border-orange-100 dark:border-orange-800 border-dashed">
+                <p className="text-[9px] font-black text-orange-600 uppercase tracking-widest mb-1">Page Total</p>
+                <p className="text-2xl font-black text-orange-600">₹{paginatedBills.reduce((s, b) => s + b.totalAmount, 0).toLocaleString('en-IN')}</p>
               </div>
             </div>
           </CardHeader>
           <CardContent className="p-0">
             {filteredBills.length === 0 ? (
-              <div className="py-20 text-center">
-                <div className="h-20 w-20 rounded-full bg-orange-50 dark:bg-orange-950 flex items-center justify-center mx-auto mb-4">
+              <div className="py-24 text-center">
+                <div className="h-20 w-20 rounded-[1.5rem] bg-orange-50 dark:bg-orange-950/30 flex items-center justify-center mx-auto mb-6 shadow-inner">
                   <Receipt className="h-10 w-10 text-orange-200" />
                 </div>
-                <h3 className="text-xl font-black text-slate-800 dark:text-white">No matches found</h3>
-                <p className="text-slate-500 text-sm">We couldn't find any bills for these filters.</p>
-                <Button variant="link" onClick={clearFilters} className="mt-3 text-orange-600 font-bold text-sm">Clear all filters</Button>
+                <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">No matches found</h3>
+                <p className="text-[11px] text-slate-500 mt-2 font-bold uppercase tracking-widest">We couldn't find any bills for these filters.</p>
+                <Button variant="link" onClick={clearFilters} className="mt-4 text-orange-600 font-black text-[10px] tracking-widest uppercase hover:text-orange-700">Clear all filters</Button>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <Table>
-                  <TableHeader className="bg-slate-50/50 dark:bg-slate-900/50">
+                  <TableHeader className="bg-slate-50 dark:bg-[#0B0C10]">
                     <TableRow className="hover:bg-transparent border-none">
-                      <TableHead className="py-3 pl-6 font-black uppercase text-[10px] text-slate-400 tracking-widest">ID / Number</TableHead>
+                      <TableHead className="py-4 pl-8 font-black uppercase text-[10px] text-slate-400 tracking-widest">ID / Number</TableHead>
                       <TableHead className="py-3 font-black uppercase text-[10px] text-slate-400 tracking-widest">Timeline</TableHead>
                       <TableHead className="py-3 font-black uppercase text-[10px] text-slate-400 tracking-widest">Biller / Cashier</TableHead>
                       <TableHead className="py-3 font-black uppercase text-[10px] text-slate-400 tracking-widest">Inventory Detail</TableHead>
@@ -426,13 +443,13 @@ export default function BillingHistory() {
                       return (
                         <TableRow
                           key={billId}
-                          className="group hover:bg-orange-50/30 dark:hover:bg-orange-950/20 cursor-pointer border-orange-50/50 dark:border-slate-800"
+                          className="group hover:bg-orange-50/50 dark:hover:bg-orange-950/10 cursor-pointer border-slate-100 dark:border-white/5 transition-colors"
                           onClick={() => viewBillDetails(bill)}
                         >
-                          <TableCell className="pl-6 py-3">
+                          <TableCell className="pl-8 py-5">
                             <div className="flex flex-col">
-                              <span className="font-mono font-bold text-orange-600 bg-orange-100 dark:bg-orange-500/10 px-2 py-0.5 rounded-md w-fit text-xs">#{bill.billNumber}</span>
-                              <span className="text-[9px] text-slate-400 mt-0.5 uppercase font-bold">{(billId || '--------').slice(-8)}</span>
+                              <span className="font-mono font-black text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/30 px-3 py-1 rounded-[10px] w-fit text-[11px] shadow-sm tracking-tighter">#{bill.billNumber}</span>
+                              <span className="text-[9px] text-slate-400 mt-1.5 uppercase font-black tracking-widest">{(billId || '--------').slice(-8)}</span>
                             </div>
                           </TableCell>
                           <TableCell className="py-3">
@@ -445,43 +462,43 @@ export default function BillingHistory() {
                               </span>
                             </div>
                           </TableCell>
-                          <TableCell className="py-3">
-                            <div className="flex items-center gap-2">
-                              <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-orange-400 to-amber-500 flex items-center justify-center shadow-md">
-                                <span className="text-white text-[10px] font-black">{bill.billerName.charAt(0)}</span>
+                          <TableCell className="py-5">
+                            <div className="flex items-center gap-3">
+                              <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-orange-400 to-amber-500 flex items-center justify-center shadow-lg shadow-orange-500/10">
+                                <span className="text-white text-[11px] font-black">{bill.billerName.charAt(0)}</span>
                               </div>
-                              <span className="font-bold text-slate-800 dark:text-white text-xs">{bill.billerName}</span>
+                              <span className="font-black text-slate-900 dark:text-white text-[13px] uppercase tracking-tight">{bill.billerName}</span>
                             </div>
                           </TableCell>
-                          <TableCell className="py-3">
-                            <div className="flex flex-wrap gap-1 max-w-[180px]">
+                          <TableCell className="py-5">
+                            <div className="flex flex-wrap gap-1.5 max-w-[200px]">
                               {bill.items.slice(0, 2).map((item, idx) => (
-                                <Badge key={idx} variant="outline" className="rounded-md border-slate-200 dark:border-slate-700 text-slate-500 text-[9px] py-0 px-1 h-5">
+                                <Badge key={idx} variant="outline" className="rounded-lg border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0B0C10] text-slate-500 text-[10px] font-black py-0.5 px-2 h-6 uppercase">
                                   {item.itemName.split(' ')[0]}×{item.quantity}
                                 </Badge>
                               ))}
                               {bill.items.length > 2 && (
-                                <span className="text-[9px] font-black text-orange-400 self-center">+{bill.items.length - 2} MORE</span>
+                                <span className="text-[9px] font-black text-orange-400 self-center uppercase tracking-widest ml-1">+{bill.items.length - 2} MORE</span>
                               )}
                             </div>
                           </TableCell>
-                          <TableCell className="py-3">
-                            <div className="flex items-center gap-2">
+                          <TableCell className="py-5">
+                            <div className="flex items-center gap-3">
                               {bill.paymentMode === 'cash' ? (
-                                <div className="h-7 w-7 rounded-lg bg-green-100 dark:bg-green-500/10 flex items-center justify-center"><Banknote className="h-3.5 w-3.5 text-green-600" /></div>
+                                <div className="h-9 w-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 flex items-center justify-center shadow-inner"><Banknote className="h-4.5 w-4.5 text-emerald-600" /></div>
                               ) : (
-                                <div className="h-7 w-7 rounded-lg bg-orange-100 dark:bg-orange-500/10 flex items-center justify-center"><Smartphone className="h-3.5 w-3.5 text-orange-600" /></div>
+                                <div className="h-9 w-9 rounded-xl bg-orange-50 dark:bg-orange-950/30 flex items-center justify-center shadow-inner"><Smartphone className="h-4.5 w-4.5 text-orange-600" /></div>
                               )}
-                              <span className="font-black text-[9px] uppercase text-slate-600 dark:text-slate-400">{bill.paymentMode}</span>
+                              <span className="font-black text-[10px] uppercase tracking-widest text-slate-500">{bill.paymentMode}</span>
                             </div>
                           </TableCell>
-                          <TableCell className="text-right pr-6 py-3">
+                          <TableCell className="text-right pr-8 py-5">
                             <div className="flex flex-col items-end">
-                              <span className="font-black text-xl bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">₹{bill.totalAmount.toLocaleString('en-IN')}</span>
-                              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity mt-1">
-                                <Button variant="ghost" size="sm" className="h-6 text-[9px] font-bold" onClick={(e) => { e.stopPropagation(); viewBillDetails(bill); }}>VIEW BILL</Button>
-                                <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-md" onClick={(e) => { e.stopPropagation(); setBillToDelete(bill); }}>
-                                  <Trash2 className="h-3.5 w-3.5" />
+                              <span className="font-black text-2xl text-slate-900 dark:text-white tracking-tighter">₹{bill.totalAmount.toLocaleString('en-IN')}</span>
+                              <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-y-1 group-hover:translate-y-0 mt-2">
+                                <Button variant="ghost" size="sm" className="h-7 px-3 text-[10px] font-black uppercase tracking-widest bg-slate-100 dark:bg-slate-800 rounded-lg hover:bg-slate-900 hover:text-white transition-all" onClick={(e) => { e.stopPropagation(); viewBillDetails(bill); }}>VIEW BILL</Button>
+                                <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-red-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg" onClick={(e) => { e.stopPropagation(); setBillToDelete(bill); }}>
+                                  <Trash2 className="h-4 w-4" />
                                 </Button>
                               </div>
                             </div>
@@ -496,9 +513,9 @@ export default function BillingHistory() {
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
-              <div className="p-8 border-t border-orange-50/50 flex items-center justify-between">
-                <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                  PAGE <span className="text-slate-800 dark:text-white">{currentPage}</span> OF <span className="text-slate-800 dark:text-white">{totalPages}</span>
+              <div className="p-8 border-t border-slate-100 dark:border-white/5 flex items-center justify-between bg-slate-50/50 dark:bg-[#0B0C10]/50 mt-auto">
+                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                  PAGE <span className="text-slate-900 dark:text-white">{currentPage}</span> OF <span className="text-slate-900 dark:text-white">{totalPages}</span>
                 </div>
                 <div className="flex gap-2">
                   <Button
@@ -506,15 +523,15 @@ export default function BillingHistory() {
                     size="sm"
                     onClick={() => setCurrentPage(c => Math.max(1, c - 1))}
                     disabled={currentPage === 1}
-                    className="rounded-xl border-orange-100 h-10 px-4"
-                  ><ChevronLeft className="h-4 w-4 mr-1" /> PREV</Button>
+                    className="rounded-xl border-slate-200 dark:border-slate-800 h-11 px-5 font-black text-[10px] tracking-widest uppercase bg-white dark:bg-[#1C1D21]"
+                  ><ChevronLeft className="h-4 w-4 mr-2 text-orange-500" /> PREV</Button>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setCurrentPage(c => Math.min(totalPages, c + 1))}
                     disabled={currentPage === totalPages}
-                    className="rounded-xl border-orange-100 h-10 px-4"
-                  >NEXT <ChevronRight className="h-4 w-4 ml-1" /></Button>
+                    className="rounded-xl border-slate-200 dark:border-slate-800 h-11 px-5 font-black text-[10px] tracking-widest uppercase bg-white dark:bg-[#1C1D21]"
+                  >NEXT <ChevronRight className="h-4 w-4 ml-2 text-orange-500" /></Button>
                 </div>
               </div>
             )}
@@ -523,81 +540,84 @@ export default function BillingHistory() {
 
         {/* Invoice Detail Dialog */}
         <Dialog open={isBillDialogOpen} onOpenChange={setIsBillDialogOpen}>
-          <DialogContent className="max-w-lg rounded-[1.5rem] border-2 border-orange-100 dark:border-slate-800 p-0 overflow-hidden">
+          <DialogContent className="max-w-lg rounded-[2.5rem] border-none shadow-2xl bg-white dark:bg-[#1C1D21] p-0 overflow-hidden">
             {selectedBill && (
               <div className="flex flex-col">
-                <div className="bg-gradient-to-br from-orange-500 to-amber-600 p-5 text-white relative">
-                  <div className="absolute top-0 right-0 p-5 opacity-10">
-                    <Receipt className="h-24 w-24" />
+                <div className="bg-gradient-to-br from-orange-500 to-amber-600 p-8 text-white relative">
+                  <div className="absolute top-0 right-0 p-8 opacity-10">
+                    <Receipt className="h-32 w-32" />
                   </div>
-                  <div className="flex justify-between items-start">
+                  <div className="flex justify-between items-start relative z-10">
                     <div>
-                      <Badge className="bg-white/20 hover:bg-white/30 text-white border-none mb-2 font-black text-[10px]">INVOICE #{selectedBill.billNumber}</Badge>
-                      <h2 className="text-3xl font-black">₹{selectedBill.totalAmount.toLocaleString('en-IN')}</h2>
+                      <Badge className="bg-white/20 hover:bg-white/30 text-white border-none mb-3 font-black text-[10px] uppercase tracking-widest px-3 py-1">INVOICE #{selectedBill.billNumber}</Badge>
+                      <h2 className="text-4xl font-black tracking-tight mt-1">₹{selectedBill.totalAmount.toLocaleString('en-IN')}</h2>
                     </div>
                     <div className="text-right">
-                      <p className="text-[10px] font-bold opacity-80 uppercase tracking-widest">Cashier</p>
-                      <p className="text-lg font-black">{selectedBill.billerName}</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest opacity-80 mb-2">Cashier</p>
+                      <div className="flex items-center gap-2 justify-end">
+                        <div className="h-9 w-9 rounded-xl bg-white/20 flex items-center justify-center font-black text-xs">{selectedBill.billerName.charAt(0)}</div>
+                        <p className="text-xl font-black">{selectedBill.billerName}</p>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="p-5 bg-white dark:bg-slate-900">
-                  <div className="grid grid-cols-2 gap-4 mb-6">
-                    <div className="space-y-0.5">
-                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Date Issued</p>
-                      <p className="font-bold text-xs">{new Date(selectedBill.createdAt).toLocaleString('en-IN', { dateStyle: 'long', timeStyle: 'short' })}</p>
+                <div className="p-8 bg-white dark:bg-[#1C1D21]">
+                  <div className="grid grid-cols-2 gap-6 mb-8">
+                    <div className="space-y-2">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Date Issued</p>
+                      <p className="font-bold text-[13px] text-slate-900 dark:text-white line-clamp-1">{new Date(selectedBill.createdAt).toLocaleString('en-IN', { dateStyle: 'long', timeStyle: 'short' })}</p>
                     </div>
-                    <div className="space-y-0.5 text-right">
-                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Settlement Method</p>
-                      <Badge className={cn("font-black capitalize text-[9px] h-5", selectedBill.paymentMode === 'cash' ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700")}>
+                    <div className="space-y-2 text-right">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Settlement Method</p>
+                      <Badge className={cn("font-black uppercase text-[10px] h-6 px-3 tracking-widest", selectedBill.paymentMode === 'cash' ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30" : "bg-indigo-50 text-indigo-600 dark:bg-indigo-950/30")}>
                         {selectedBill.paymentMode}
                       </Badge>
                     </div>
                   </div>
 
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Sparkles className="h-3.5 w-3.5 text-orange-400" />
-                      <span className="text-xs font-black uppercase text-slate-800 dark:text-white">Order Summary</span>
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="h-2 w-2 rounded-full bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]"></div>
+                      <span className="text-[11px] font-black uppercase text-slate-400 tracking-widest">Order Summary</span>
                     </div>
-                    <div className="rounded-2xl border-2 border-slate-50 dark:border-slate-800 overflow-hidden">
-                      <div className="px-4 py-2.5 bg-slate-50/50 dark:bg-slate-900/50 grid grid-cols-4 font-black text-[9px] text-slate-400 tracking-widest uppercase border-b border-slate-50 dark:border-slate-800">
+                    <div className="rounded-[2rem] border border-slate-100 dark:border-white/5 overflow-hidden shadow-inner">
+                      <div className="px-6 py-4 bg-slate-50 dark:bg-[#0B0C10] grid grid-cols-4 font-black text-[10px] text-slate-400 tracking-widest uppercase">
                         <span className="col-span-2">Description</span>
                         <span className="text-center">Qty</span>
                         <span className="text-right">Total</span>
                       </div>
-                      <div className="max-h-[220px] overflow-y-auto">
+                      <div className="max-h-[250px] overflow-y-auto custom-scrollbar">
                         {selectedBill.items.map((item, idx) => (
-                          <div key={idx} className="px-4 py-2.5 grid grid-cols-4 border-b border-slate-50 dark:border-slate-800 last:border-none">
-                            <div className="col-span-2 space-y-0.5">
-                              <p className="font-bold text-slate-800 dark:text-white uppercase text-[11px] leading-tight">{item.itemName}</p>
-                              <p className="text-[9px] font-bold text-slate-400">UNIT: ₹{item.price}</p>
+                          <div key={idx} className="px-6 py-4 grid grid-cols-4 border-b border-slate-50 dark:border-white/5 last:border-none hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+                            <div className="col-span-2 space-y-1">
+                              <p className="font-black text-slate-900 dark:text-white uppercase text-[13px] tracking-tight line-clamp-1">{item.itemName}</p>
+                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">UNIT: ₹{item.price}</p>
                             </div>
-                            <span className="text-center font-black text-slate-700 dark:text-slate-300 text-xs">×{item.quantity}</span>
-                            <span className="text-right font-black text-slate-900 dark:text-white text-xs">₹{item.total.toLocaleString('en-IN')}</span>
+                            <span className="text-center font-black text-slate-900 dark:text-white text-sm pt-0.5">×{item.quantity}</span>
+                            <span className="text-right font-black text-slate-900 dark:text-white text-sm pt-0.5">₹{item.total.toLocaleString('en-IN')}</span>
                           </div>
                         ))}
                       </div>
                     </div>
                   </div>
 
-                  <div className="mt-6 pt-4 border-t-2 border-dashed border-slate-100 dark:border-slate-800 flex justify-between items-center">
-                    <div className="space-y-0.5">
+                  <div className="mt-8 pt-6 border-t border-slate-100 dark:border-white/5 flex justify-between items-center">
+                    <div className="space-y-1">
                       <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Verification ID</p>
-                      <p className="text-[10px] font-mono font-bold text-slate-600">{(selectedBill.id || (selectedBill as any)._id || '--------').slice(-12)}</p>
+                      <p className="text-[11px] font-mono font-black text-indigo-400">{(selectedBill.id || (selectedBill as any)._id || '--------').slice(-12).toUpperCase()}</p>
                     </div>
                     <div className="text-right">
-                      <div className="flex items-baseline justify-end gap-2">
-                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Grand Total</span>
-                        <span className="text-2xl font-black bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">₹{selectedBill.totalAmount.toLocaleString('en-IN')}</span>
+                      <div className="flex flex-col items-end">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Grand Total</span>
+                        <span className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter">₹{selectedBill.totalAmount.toLocaleString('en-IN')}</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="mt-6 flex gap-3">
-                    <Button className="flex-1 h-11 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs shadow-md"><Download className="h-3.5 w-3.5 mr-2" /> DOWNLOAD PDF</Button>
-                    <Button variant="outline" className="h-11 w-11 p-0 rounded-xl border-orange-100" onClick={() => setIsBillDialogOpen(false)}><X className="h-4 w-4 text-orange-600" /></Button>
+                  <div className="mt-10 flex gap-4">
+                    <Button className="flex-1 h-12 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-[11px] tracking-widest uppercase shadow-lg transition-all transform active:scale-[0.98]"><Download className="h-4 w-4 mr-2" /> PDF INVOICE</Button>
+                    <Button variant="outline" className="h-12 w-12 p-0 rounded-xl border-slate-200 dark:border-slate-800" onClick={() => setIsBillDialogOpen(false)}><X className="h-5 w-5 text-indigo-500" /></Button>
                   </div>
                 </div>
               </div>
@@ -607,20 +627,23 @@ export default function BillingHistory() {
 
         {/* Delete Confirmation Alert Dialog */}
         <AlertDialog open={!!billToDelete} onOpenChange={(open) => !open && setBillToDelete(null)}>
-          <AlertDialogContent className="rounded-2xl max-w-sm">
-            <AlertDialogHeader className="mb-2">
-              <AlertDialogTitle className="text-xl font-black">Delete Bill #{billToDelete?.billNumber}?</AlertDialogTitle>
-              <AlertDialogDescription className="text-sm font-medium">
-                This will permanently delete this transaction from your history and the database. This action cannot be undone.
+          <AlertDialogContent className="rounded-[2.5rem] border-none shadow-2xl bg-white dark:bg-[#1C1D21] p-8 max-w-sm">
+            <AlertDialogHeader className="mb-6">
+              <div className="h-14 w-14 rounded-2xl bg-red-50 dark:bg-red-950/30 flex items-center justify-center text-red-600 mb-4 shadow-inner">
+                <Trash2 className="h-7 w-7" />
+              </div>
+              <AlertDialogTitle className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Delete Bill?</AlertDialogTitle>
+              <AlertDialogDescription className="text-[11px] font-black text-slate-400 uppercase tracking-widest mt-2 leading-relaxed">
+                Bill <span className="text-red-500">#{billToDelete?.billNumber}</span> will be permanently removed. This action cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel className="rounded-xl h-11 w-full sm:w-auto font-black text-slate-500">Cancel</AlertDialogCancel>
+            <AlertDialogFooter className="flex flex-col gap-3 sm:flex-row">
+              <AlertDialogCancel className="flex-1 h-12 rounded-xl h-11 border-none bg-slate-100 dark:bg-slate-800 font-black text-slate-500 uppercase tracking-widest text-[10px]">Cancel</AlertDialogCancel>
               <AlertDialogAction
                 onClick={handleDeleteBill}
-                className="rounded-xl h-11 w-full sm:w-auto bg-red-500 hover:bg-red-600 text-white font-black border-0"
+                className="flex-1 h-12 rounded-xl h-11 bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest text-[10px] shadow-lg shadow-red-500/20"
               >
-                Yes, delete bill
+                Delete Now
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

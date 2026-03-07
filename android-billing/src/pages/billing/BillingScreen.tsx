@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -20,11 +20,265 @@ import {
     ChevronDown,
     Trash2,
     Refrigerator,
-    RefreshCcw,
 } from 'lucide-react';
 import { printBill } from '@/utils/printBill';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import confetti from 'canvas-confetti';
+import vadapavIcon from '@/assets/images/vadapav-icon.png';
+
+const BillingSkeleton = () => (
+    <div className="flex flex-col h-full bg-slate-50 dark:bg-slate-950 px-3 pt-3">
+        <div className="h-11 w-full rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 animate-pulse mb-4" />
+        <div className="flex gap-2 overflow-hidden mb-6">
+            {[1, 2, 3, 4].map(i => (
+                <div key={i} className="h-8 w-20 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 animate-pulse flex-shrink-0" />
+            ))}
+        </div>
+        <div className="grid grid-cols-2 gap-2.5">
+            {[1, 2, 3, 4, 5, 6].map(i => (
+                <div key={i} className="h-28 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 animate-pulse" />
+            ))}
+        </div>
+    </div>
+);
+
+
+// Memoized Item Card for Grid performance
+const ItemCard = React.memo(React.forwardRef(({
+    item,
+    count,
+    idx,
+    onAdd
+}: {
+    item: Item;
+    count: number;
+    idx: number;
+    onAdd: (item: Item, e: React.MouseEvent | React.TouchEvent) => void
+}, ref: React.ForwardedRef<HTMLButtonElement>) => {
+    return (
+        <motion.button
+            ref={ref}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.88 }}
+            transition={{
+                duration: 0.4,
+                delay: Math.min(idx * 0.03, 0.15),
+                ease: [0.23, 1, 0.32, 1]
+            }}
+            onClick={(e) => onAdd(item, e)}
+            style={{ transform: 'translateZ(0)', willChange: 'transform' }}
+            className={cn(
+                'relative flex flex-col justify-between p-3.5 rounded-2xl border-2 text-left overflow-hidden active:scale-95 transition-all touch-manipulation min-h-[100px]',
+                count > 0
+                    ? 'bg-orange-50 dark:bg-orange-950/40 border-orange-400 shadow-md shadow-orange-100 dark:shadow-orange-900/20'
+                    : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 shadow-sm hover:border-orange-200 dark:hover:border-orange-900/50'
+            )}
+        >
+            <AnimatePresence>
+                {count > 0 && (
+                    <motion.div
+                        initial={{ scale: 0.5, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0.5, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="absolute top-2.5 right-2.5 h-5 min-w-[20px] px-1 rounded-full bg-orange-600 text-white text-[10px] font-black flex items-center justify-center z-10"
+                    >
+                        {count}
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            <p className={cn(
+                'font-extrabold text-sm leading-snug line-clamp-2 uppercase tracking-tight pr-6',
+                count > 0 ? 'text-orange-900 dark:text-orange-100' : 'text-slate-700 dark:text-slate-200'
+            )}>
+                {item.name}
+            </p>
+
+            <div className="flex items-center justify-between mt-2">
+                <span className={cn('text-xl font-black tracking-tight', count > 0 ? 'text-orange-700 dark:text-orange-400' : 'text-slate-900 dark:text-white')}>
+                    ₹{item.price}
+                </span>
+                <div className={cn(
+                    'h-8 w-8 rounded-xl flex items-center justify-center text-white shadow transition-all duration-300',
+                    count > 0 ? 'bg-orange-600 rotate-0' : 'bg-slate-800 dark:bg-slate-700'
+                )}>
+                    <Plus className={cn("h-4 w-4 transition-transform duration-300", count > 0 ? "scale-0" : "scale-100")} strokeWidth={3} />
+                    {count > 0 && <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute"><Plus className="h-4 w-4" strokeWidth={4} /></motion.div>}
+                </div>
+            </div>
+        </motion.button>
+    );
+}));
+ItemCard.displayName = 'ItemCard';
+
+const FridgeItemCard = React.memo(React.forwardRef(({
+    item,
+    count,
+    idx,
+    onAdd
+}: {
+    item: any;
+    count: number;
+    idx: number;
+    onAdd: (item: any, e: React.MouseEvent | React.TouchEvent) => void
+}, ref: React.ForwardedRef<HTMLButtonElement>) => {
+    const isOut = item.stock === 0;
+    return (
+        <motion.button
+            ref={ref}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{
+                duration: 0.4,
+                delay: Math.min(idx * 0.03, 0.15),
+                ease: [0.23, 1, 0.32, 1]
+            }}
+            onClick={(e) => onAdd(item, e)}
+            disabled={isOut}
+            style={{ transform: 'translateZ(0)', willChange: 'transform' }}
+            className={cn(
+                'relative flex flex-col justify-between p-3.5 rounded-2xl border-2 text-left overflow-hidden active:scale-95 transition-all touch-manipulation min-h-[100px]',
+                count > 0 ? 'bg-cyan-50 dark:bg-cyan-950/40 border-cyan-400 shadow-md shadow-cyan-100 dark:shadow-cyan-900/20' :
+                    isOut ? 'bg-slate-50 dark:bg-slate-900/40 border-slate-100 dark:border-slate-800/50 opacity-60 grayscale' : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 shadow-sm hover:border-cyan-200 dark:hover:cyan-900/50'
+            )}
+        >
+            <AnimatePresence>
+                {count > 0 && (
+                    <motion.div
+                        initial={{ scale: 0.5, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0.5, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="absolute top-2.5 right-2.5 h-5 min-w-[20px] px-1 rounded-full bg-cyan-600 text-white text-[10px] font-black flex items-center justify-center z-10"
+                    >
+                        {count}
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            <div>
+                <p className={cn(
+                    'font-extrabold text-sm leading-snug line-clamp-2 uppercase tracking-tight pr-6',
+                    count > 0 ? 'text-cyan-900 dark:text-cyan-100' : 'text-slate-700 dark:text-slate-200'
+                )}>
+                    {item.name}
+                </p>
+                {item.stock > 0 && item.stock <= item.lowStockThreshold && (
+                    <p className="text-[9px] font-black text-amber-600 dark:text-amber-500 mt-0.5">Only {item.stock} left</p>
+                )}
+            </div>
+
+            <div className="flex items-center justify-between mt-2">
+                <span className={cn('text-xl font-black tracking-tight', count > 0 ? 'text-cyan-700 dark:text-cyan-400' : 'text-slate-900 dark:text-white')}>
+                    ₹{item.price}
+                </span>
+                <div className={cn(
+                    'h-8 w-8 rounded-xl flex items-center justify-center text-white shadow transition-colors',
+                    isOut ? 'bg-slate-300 dark:bg-slate-700 shadow-none' : count > 0 ? 'bg-cyan-600' : 'bg-slate-800 dark:bg-slate-700'
+                )}>
+                    {isOut ? <X className="h-4 w-4 text-slate-500 dark:text-slate-400" /> : <Plus className="h-4 w-4" strokeWidth={3} />}
+                </div>
+            </div>
+        </motion.button>
+    );
+}));
+FridgeItemCard.displayName = 'FridgeItemCard';
+
+const CartItem = React.memo(React.forwardRef(({ bi, onUpdateQuantity }: { bi: BillItem, onUpdateQuantity: (id: string, d: number) => void }, ref: React.ForwardedRef<HTMLDivElement>) => (
+    <div ref={ref} className="relative overflow-hidden rounded-2xl h-[74px]">
+        <div className="absolute inset-0 bg-red-500 flex justify-end items-center px-6">
+            <Trash2 className="text-white h-5 w-5" />
+        </div>
+        <motion.div
+            layout="position"
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, x: -100 }}
+            drag="x"
+            dragConstraints={{ left: -100, right: 0 }}
+            dragElastic={0.05}
+            dragSnapToOrigin
+            onDragEnd={(_, info) => {
+                if (info.offset.x < -60 || info.velocity.x < -300) {
+                    onUpdateQuantity(bi.itemId, -bi.quantity);
+                }
+            }}
+            whileDrag={{ scale: 1.02, zIndex: 10 }}
+            transition={{ type: "spring", stiffness: 500, damping: 35, mass: 0.5 }}
+            style={{ transform: 'translateZ(0)', willChange: 'transform' }}
+            className="relative z-10 h-full flex items-center gap-3 p-3 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-sm touch-pan-y"
+        >
+            <div className="flex-1 min-w-0">
+                <p className="font-extrabold text-sm text-slate-800 dark:text-white truncate uppercase leading-none">{bi.itemName}</p>
+                <p className="text-[11px] text-slate-400 dark:text-slate-500 font-bold mt-1">₹{bi.price} × {bi.quantity} = <span className="text-slate-600 dark:text-slate-300 font-black">₹{bi.total}</span></p>
+            </div>
+            <div className="flex items-center gap-1 bg-slate-50 dark:bg-slate-900/50 rounded-xl p-0.5 border border-slate-100 dark:border-slate-800">
+                <button
+                    className="h-8 w-8 flex items-center justify-center rounded-lg text-red-500 active:bg-red-100 touch-manipulation transition-colors"
+                    onClick={() => onUpdateQuantity(bi.itemId, -1)}
+                >
+                    <Minus className="h-3.5 w-3.5" strokeWidth={3} />
+                </button>
+                <span className="w-6 text-center font-black text-sm text-slate-800 dark:text-white tabular-nums">{bi.quantity}</span>
+                <button
+                    className="h-8 w-8 flex items-center justify-center rounded-lg text-orange-600 active:bg-orange-100 touch-manipulation transition-colors"
+                    onClick={() => onUpdateQuantity(bi.itemId, 1)}
+                >
+                    <Plus className="h-3.5 w-3.5" strokeWidth={3} />
+                </button>
+            </div>
+        </motion.div>
+    </div>
+)));
+CartItem.displayName = 'CartItem';
+
+
+// Standalone Animation Layer to prevent main screen re-renders
+const AnimationLayer = React.memo(({
+    flyingItems
+}: {
+    flyingItems: { id: number; x: number; y: number; name: string }[]
+}) => {
+    return (
+        <AnimatePresence>
+            {flyingItems.map(f => (
+                <motion.div
+                    key={f.id}
+                    initial={{
+                        position: 'fixed',
+                        left: f.x,
+                        top: f.y,
+                        x: '-50%',
+                        y: '-50%',
+                        scale: 1,
+                        opacity: 1,
+                        zIndex: 9999
+                    }}
+                    animate={{
+                        left: '50%',
+                        top: typeof window !== 'undefined' ? window.innerHeight - 50 : 800,
+                        scale: 0.1,
+                        opacity: 0,
+                    }}
+                    transition={{
+                        duration: 0.7,
+                        ease: [0.23, 1, 0.32, 1]
+                    }}
+                    style={{ transform: 'translateZ(0)', willChange: 'transform' }}
+                    className="pointer-events-none whitespace-nowrap"
+                >
+                    <span className="bg-orange-600 text-white px-3 py-1 rounded-full text-[10px] font-black uppercase shadow-lg border border-orange-400">
+                        {f.name}
+                    </span>
+                </motion.div>
+            ))}
+        </AnimatePresence>
+    );
+});
+AnimationLayer.displayName = 'AnimationLayer';
 
 export default function BillingScreen() {
     const [items, setItems] = useState<Item[]>([]);
@@ -37,6 +291,9 @@ export default function BillingScreen() {
     const { user } = useAuth();
     const { toast } = useToast();
     const [lastBill, setLastBill] = useState<Bill | null>(null);
+    const [selectedCategory, setSelectedCategory] = useState<string>('⭐ Popular');
+    const [pulse, setPulse] = useState(false);
+    const [flyingItems, setFlyingItems] = useState<{ id: number; x: number; y: number; name: string }[]>([]);
     const searchRef = useRef<HTMLInputElement>(null);
 
     // Pull to refresh state
@@ -107,16 +364,53 @@ export default function BillingScreen() {
     }, [cartOpen]);
 
     const searchLower = useMemo(() => searchQuery.toLowerCase(), [searchQuery]);
-    const filteredItems = useMemo(() =>
-        items.filter(item => item.name.toLowerCase().includes(searchLower)),
-        [items, searchLower]
-    );
+    const categories = useMemo(() => {
+        const cats = new Set(items.map(i => i.category || 'Other'));
+        const list = Array.from(cats).sort();
+        const finalCats = ['All', '⭐ Popular', ...list];
+        return finalCats;
+    }, [items]);
+
+    const popularItems = useMemo(() => {
+        // Sort by soldCount descending, pick top 4
+        return [...items].sort((a, b) => (b.soldCount || 0) - (a.soldCount || 0)).slice(0, 4);
+    }, [items]);
+
+    const filteredItems = useMemo(() => {
+        if (selectedCategory === '⭐ Popular') return popularItems;
+        return items.filter(item => {
+            const matchesSearch = item.name.toLowerCase().includes(searchLower);
+            const matchesCategory = selectedCategory === 'All' || (item.category || 'Other') === selectedCategory;
+            return matchesSearch && matchesCategory;
+        });
+    }, [items, searchLower, selectedCategory, popularItems]);
+
     const filteredFridgeItems = useMemo(() =>
-        fridgeItems.filter(fi => fi.name.toLowerCase().includes(searchLower)),
-        [fridgeItems, searchLower]
+        fridgeItems.filter(fi => {
+            const matchesSearch = fi.name.toLowerCase().includes(searchLower);
+            return matchesSearch && (selectedCategory === 'All' || selectedCategory === 'Fridge' ? matchesSearch : false);
+        }),
+        [fridgeItems, searchLower, selectedCategory]
     );
 
-    const addItem = useCallback((item: Item) => {
+    const addItem = useCallback((item: Item, e?: React.MouseEvent | React.TouchEvent) => {
+        setPulse(true);
+        setTimeout(() => setPulse(false), 300);
+
+        if (e && 'currentTarget' in e) {
+            const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+            const id = Date.now() + Math.random();
+            setFlyingItems(prev => [...prev, {
+                id,
+                x: rect.left + rect.width / 2,
+                y: rect.top + rect.height / 2,
+                name: item.name
+            }]);
+            setTimeout(() => {
+                setFlyingItems(prev => prev.filter(f => f.id !== id));
+            }, 800);
+        }
+
         setBillItems(prev => {
             const existing = prev.find(bi => bi.itemId === item.id);
             if (existing) {
@@ -137,11 +431,28 @@ export default function BillingScreen() {
         });
     }, []);
 
-    const addFridgeItem = useCallback((item: any) => {
+    const addFridgeItem = useCallback((item: any, e?: React.MouseEvent | React.TouchEvent) => {
         const itemId = item.id || item._id;
         if (item.stock === 0) {
             toast({ title: `${item.name} is out of stock`, variant: 'destructive' }); return;
         }
+        setPulse(true);
+        setTimeout(() => setPulse(false), 300);
+
+        if (e && 'currentTarget' in e) {
+            const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+            const id = Date.now() + Math.random();
+            setFlyingItems(prev => [...prev, {
+                id,
+                x: rect.left + rect.width / 2,
+                y: rect.top + rect.height / 2,
+                name: item.name
+            }]);
+            setTimeout(() => {
+                setFlyingItems(prev => prev.filter(f => f.id !== id));
+            }, 800);
+        }
+
         setBillItems(prev => {
             const existing = prev.find(bi => bi.itemId === itemId && bi.isFridgeItem);
             if (existing) {
@@ -209,6 +520,14 @@ export default function BillingScreen() {
             setLastBill(bill);
             setCartOpen(false);
 
+            // Celebration!
+            confetti({
+                particleCount: 150,
+                spread: 70,
+                origin: { y: 0.8 },
+                colors: ['#f97316', '#fbbf24', '#ffffff']
+            });
+
             // Use printBill utility (works in Capacitor Android WebView, unlike window.print)
             setTimeout(() => printBill(bill), 300);
         } catch (error: unknown) {
@@ -239,14 +558,7 @@ export default function BillingScreen() {
     }, [billItems]);
 
     // ── Loading state ──────────────────────────────────────
-    if (isLoading) return (
-        <div className="flex items-center justify-center h-full bg-gradient-to-br from-orange-50 to-amber-50 dark:from-slate-950 dark:to-slate-900">
-            <div className="flex flex-col items-center gap-4">
-                <div className="h-14 w-14 rounded-full border-4 border-orange-200 dark:border-orange-900 border-t-orange-600 dark:border-t-orange-500 animate-spin" />
-                <p className="text-slate-600 dark:text-slate-400 font-bold text-sm animate-pulse">Loading Menu…</p>
-            </div>
-        </div>
-    );
+    if (isLoading) return <BillingSkeleton />;
 
     return (
         <>
@@ -254,7 +566,7 @@ export default function BillingScreen() {
             <div className="flex flex-col h-full bg-slate-50 dark:bg-slate-950">
 
                 {/* Search bar */}
-                <div className="px-3 pt-3 pb-2">
+                <div className="px-3 pt-3 pb-1">
                     <div className="relative">
                         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                         <Input
@@ -275,16 +587,68 @@ export default function BillingScreen() {
                     </div>
                 </div>
 
-                {/* ── Pull to refresh indicator ── */}
+                {/* Categories */}
+                <div className="px-3 py-2 overflow-x-auto no-scrollbar flex items-center gap-2 whitespace-nowrap">
+                    {categories.map(cat => (
+                        <button
+                            key={cat}
+                            onClick={() => setSelectedCategory(cat)}
+                            className={cn(
+                                "px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider transition-all border",
+                                selectedCategory === cat
+                                    ? "bg-orange-600 border-orange-600 text-white shadow-md shadow-orange-500/20"
+                                    : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400"
+                            )}
+                        >
+                            {cat}
+                        </button>
+                    ))}
+                    {fridgeItems.length > 0 && (
+                        <button
+                            onClick={() => setSelectedCategory('Fridge')}
+                            className={cn(
+                                "px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider transition-all border flex items-center gap-1.5",
+                                selectedCategory === 'Fridge'
+                                    ? "bg-cyan-600 border-cyan-600 text-white shadow-md shadow-cyan-500/20"
+                                    : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400"
+                            )}
+                        >
+                            <Refrigerator className="h-3 w-3" />
+                            Fridge
+                        </button>
+                    )}
+                </div>
+
+                {/* ── Pull to refresh indicator (Snack Themed) ── */}
                 <div
-                    className="flex justify-center overflow-hidden transition-all duration-200"
+                    className="flex justify-center overflow-hidden transition-all duration-200 pointer-events-none"
                     style={{ height: `${pullProgress}px`, opacity: pullProgress / 80 }}
                 >
-                    <div className="flex items-center gap-2 text-slate-500 pt-4">
-                        <RefreshCcw className={cn("h-5 w-5", isRefreshing ? "animate-spin text-orange-500" : "")}
-                            style={{ transform: `rotate(${pullProgress * 3}deg)` }}
+                    <div className="flex flex-col items-center gap-1 pt-2">
+                        <motion.img
+                            src={vadapavIcon}
+                            className="h-10 w-10 object-contain drop-shadow-sm"
+                            animate={isRefreshing ? {
+                                rotate: [0, 15, -15, 0],
+                                y: [0, -12, 0],
+                                scale: [1, 1.15, 1]
+                            } : {
+                                rotate: pullProgress * 4.5,
+                                scale: 0.5 + (pullProgress / 160)
+                            }}
+                            transition={isRefreshing ? {
+                                duration: 0.8,
+                                repeat: Infinity,
+                                ease: "easeInOut"
+                            } : { duration: 0 }}
                         />
-                        <span className="text-xs font-bold">{isRefreshing ? 'Refreshing...' : 'Release to refresh'}</span>
+                        <motion.span
+                            animate={isRefreshing ? { opacity: [1, 0.5, 1] } : {}}
+                            transition={{ duration: 1, repeat: Infinity }}
+                            className="text-[10px] font-black uppercase tracking-tighter text-orange-500/80"
+                        >
+                            {isRefreshing ? 'Loading Snacks...' : 'Pull for Vadapav'}
+                        </motion.span>
                     </div>
                 </div>
 
@@ -294,64 +658,21 @@ export default function BillingScreen() {
                     onTouchStart={handleTouchStart}
                     onTouchMove={handleTouchMove}
                     onTouchEnd={handleTouchEnd}
+                    style={{ transform: 'translateZ(0)', willChange: 'scroll-position' }}
                 >
                     {/* Extra bottom padding so last row isn't hidden behind floating button */}
                     <div className="px-3 pb-28">
                         <div className="grid grid-cols-2 gap-2.5">
                             <AnimatePresence mode="popLayout">
-                                {filteredItems.map((item, idx) => {
-                                    const count = getItemCount(item.id);
-                                    return (
-                                        <motion.button
-                                            key={item.id}
-                                            layout
-                                            initial={{ opacity: 0, scale: 0.92 }}
-                                            animate={{ opacity: 1, scale: 1 }}
-                                            exit={{ opacity: 0, scale: 0.88 }}
-                                            transition={{ type: 'spring', stiffness: 320, damping: 26, delay: Math.min(idx * 0.015, 0.12) }}
-                                            onClick={() => addItem(item)}
-                                            className={cn(
-                                                'relative flex flex-col justify-between p-3.5 rounded-2xl border-2 text-left overflow-hidden active:scale-95 transition-all touch-manipulation min-h-[100px]',
-                                                count > 0
-                                                    ? 'bg-orange-50 dark:bg-orange-950/40 border-orange-400 shadow-md shadow-orange-100 dark:shadow-orange-900/20'
-                                                    : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 shadow-sm hover:border-orange-200 dark:hover:border-orange-900/50'
-                                            )}
-                                        >
-                                            {/* Count badge */}
-                                            <AnimatePresence>
-                                                {count > 0 && (
-                                                    <motion.div
-                                                        initial={{ scale: 0 }}
-                                                        animate={{ scale: 1 }}
-                                                        exit={{ scale: 0 }}
-                                                        className="absolute top-2.5 right-2.5 h-5 min-w-[20px] px-1 rounded-full bg-orange-600 text-white text-[10px] font-black flex items-center justify-center z-10"
-                                                    >
-                                                        {count}
-                                                    </motion.div>
-                                                )}
-                                            </AnimatePresence>
-
-                                            <p className={cn(
-                                                'font-extrabold text-sm leading-snug line-clamp-2 uppercase tracking-tight pr-6',
-                                                count > 0 ? 'text-orange-900 dark:text-orange-100' : 'text-slate-700 dark:text-slate-200'
-                                            )}>
-                                                {item.name}
-                                            </p>
-
-                                            <div className="flex items-center justify-between mt-2">
-                                                <span className={cn('text-xl font-black tracking-tight', count > 0 ? 'text-orange-700 dark:text-orange-400' : 'text-slate-900 dark:text-white')}>
-                                                    ₹{item.price}
-                                                </span>
-                                                <div className={cn(
-                                                    'h-8 w-8 rounded-xl flex items-center justify-center text-white shadow transition-colors',
-                                                    count > 0 ? 'bg-orange-600' : 'bg-slate-800 dark:bg-slate-700'
-                                                )}>
-                                                    <Plus className="h-4 w-4" strokeWidth={3} />
-                                                </div>
-                                            </div>
-                                        </motion.button>
-                                    );
-                                })}
+                                {filteredItems.map((item, idx) => (
+                                    <ItemCard
+                                        key={item.id}
+                                        item={item}
+                                        count={getItemCount(item.id)}
+                                        idx={idx}
+                                        onAdd={addItem}
+                                    />
+                                ))}
                             </AnimatePresence>
                         </div>
 
@@ -367,62 +688,15 @@ export default function BillingScreen() {
                                     <div className="h-px bg-slate-200 dark:bg-slate-800 flex-1"></div>
                                 </div>
                                 <div className="grid grid-cols-2 gap-2.5">
-                                    {filteredFridgeItems.map((item: any, idx) => {
-                                        const itemId = item.id || item._id;
-                                        const count = fridgeCountMap[itemId] || 0;
-                                        const isOut = item.stock === 0;
-                                        return (
-                                            <motion.button
-                                                key={`fridge-${itemId}`}
-                                                layout
-                                                initial={{ opacity: 0, scale: 0.92 }}
-                                                animate={{ opacity: 1, scale: 1 }}
-                                                transition={{ type: 'spring', stiffness: 320, damping: 26, delay: Math.min(idx * 0.015, 0.12) }}
-                                                onClick={() => addFridgeItem(item)}
-                                                disabled={isOut}
-                                                className={cn(
-                                                    'relative flex flex-col justify-between p-3.5 rounded-2xl border-2 text-left overflow-hidden active:scale-95 transition-all touch-manipulation min-h-[100px]',
-                                                    count > 0 ? 'bg-cyan-50 dark:bg-cyan-950/40 border-cyan-400 shadow-md shadow-cyan-100 dark:shadow-cyan-900/20' :
-                                                        isOut ? 'bg-slate-50 dark:bg-slate-900/40 border-slate-100 dark:border-slate-800/50 opacity-60 grayscale' : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 shadow-sm hover:border-cyan-200 dark:hover:border-cyan-900/50'
-                                                )}
-                                            >
-                                                <AnimatePresence>
-                                                    {count > 0 && (
-                                                        <motion.div
-                                                            initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}
-                                                            className="absolute top-2.5 right-2.5 h-5 min-w-[20px] px-1 rounded-full bg-cyan-600 text-white text-[10px] font-black flex items-center justify-center z-10"
-                                                        >
-                                                            {count}
-                                                        </motion.div>
-                                                    )}
-                                                </AnimatePresence>
-
-                                                <div>
-                                                    <p className={cn(
-                                                        'font-extrabold text-sm leading-snug line-clamp-2 uppercase tracking-tight pr-6',
-                                                        count > 0 ? 'text-cyan-900 dark:text-cyan-100' : 'text-slate-700 dark:text-slate-200'
-                                                    )}>
-                                                        {item.name}
-                                                    </p>
-                                                    {item.stock > 0 && item.stock <= item.lowStockThreshold && (
-                                                        <p className="text-[9px] font-black text-amber-600 dark:text-amber-500 mt-0.5">Only {item.stock} left</p>
-                                                    )}
-                                                </div>
-
-                                                <div className="flex items-center justify-between mt-2">
-                                                    <span className={cn('text-xl font-black tracking-tight', count > 0 ? 'text-cyan-700 dark:text-cyan-400' : 'text-slate-900 dark:text-white')}>
-                                                        ₹{item.price}
-                                                    </span>
-                                                    <div className={cn(
-                                                        'h-8 w-8 rounded-xl flex items-center justify-center text-white shadow transition-colors',
-                                                        isOut ? 'bg-slate-300 dark:bg-slate-700 shadow-none' : count > 0 ? 'bg-cyan-600' : 'bg-slate-800 dark:bg-slate-700'
-                                                    )}>
-                                                        {isOut ? <X className="h-4 w-4 text-slate-500 dark:text-slate-400" /> : <Plus className="h-4 w-4" strokeWidth={3} />}
-                                                    </div>
-                                                </div>
-                                            </motion.button>
-                                        );
-                                    })}
+                                    {filteredFridgeItems.map((item: any, idx) => (
+                                        <FridgeItemCard
+                                            key={`fridge-${item.id || item._id}`}
+                                            item={item}
+                                            count={fridgeCountMap[item.id || item._id] || 0}
+                                            idx={idx}
+                                            onAdd={addFridgeItem}
+                                        />
+                                    ))}
                                 </div>
                             </div>
                         )}
@@ -444,10 +718,18 @@ export default function BillingScreen() {
                 {
                     itemCount > 0 && !cartOpen && (
                         <motion.button
-                            initial={{ y: 80, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            exit={{ y: 80, opacity: 0 }}
-                            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                            initial={{ y: 100, opacity: 0 }}
+                            animate={{
+                                y: 0,
+                                opacity: 1,
+                                scale: pulse ? [1, 1.05, 1] : 1
+                            }}
+                            exit={{ y: 100, opacity: 0 }}
+                            transition={{
+                                duration: 0.2,
+                                ease: [0.22, 1, 0.36, 1]
+                            }}
+                            whileTap={{ scale: 0.95 }}
                             onClick={() => setCartOpen(true)}
                             className="fixed bottom-5 left-4 right-4 z-40 flex items-center justify-between bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-2xl px-5 py-4 shadow-2xl shadow-orange-500/40 touch-manipulation active:scale-[0.98] transition-transform"
                         >
@@ -462,7 +744,20 @@ export default function BillingScreen() {
                             </div>
                             <div className="text-right">
                                 <p className="text-[10px] font-black uppercase tracking-widest opacity-80">Total</p>
-                                <p className="text-xl font-black tracking-tight">₹{grandTotal.toFixed(0)}</p>
+                                <div className="h-7 overflow-hidden relative flex justify-end">
+                                    <AnimatePresence mode="popLayout" initial={false}>
+                                        <motion.p
+                                            key={grandTotal}
+                                            initial={{ y: 20, opacity: 0 }}
+                                            animate={{ y: 0, opacity: 1 }}
+                                            exit={{ y: -20, opacity: 0 }}
+                                            transition={{ duration: 0.2, ease: "easeOut" }}
+                                            className="text-xl font-black tracking-tight"
+                                        >
+                                            ₹{grandTotal.toFixed(0)}
+                                        </motion.p>
+                                    </AnimatePresence>
+                                </div>
                             </div>
                         </motion.button>
                     )
@@ -508,7 +803,10 @@ export default function BillingScreen() {
                                 initial={{ y: '100%' }}
                                 animate={{ y: 0 }}
                                 exit={{ y: '100%' }}
-                                transition={{ type: 'spring', stiffness: 400, damping: 38 }}
+                                transition={{
+                                    duration: 0.25,
+                                    ease: [0.22, 1, 0.36, 1]
+                                }}
                                 className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-slate-900 rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] dark:shadow-[0_-10px_40px_rgba(0,0,0,0.3)] flex flex-col"
                                 style={{ maxHeight: '88vh' }}
                             >
@@ -548,8 +846,10 @@ export default function BillingScreen() {
                                         <AnimatePresence mode="popLayout" initial={false}>
                                             {billItems.length === 0 ? (
                                                 <motion.div
+                                                    key="empty"
                                                     initial={{ opacity: 0 }}
                                                     animate={{ opacity: 1 }}
+                                                    exit={{ opacity: 0 }}
                                                     className="flex flex-col items-center justify-center py-10 text-center"
                                                 >
                                                     <div className="h-16 w-16 rounded-2xl bg-slate-50 flex items-center justify-center mb-3 border-2 border-dashed border-slate-200">
@@ -560,37 +860,7 @@ export default function BillingScreen() {
                                                 </motion.div>
                                             ) : (
                                                 billItems.map(bi => (
-                                                    <motion.div
-                                                        key={bi.itemId}
-                                                        layout
-                                                        initial={{ opacity: 0, x: -12 }}
-                                                        animate={{ opacity: 1, x: 0 }}
-                                                        exit={{ opacity: 0, scale: 0.9 }}
-                                                        className="flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-sm"
-                                                    >
-                                                        {/* Item info */}
-                                                        <div className="flex-1 min-w-0">
-                                                            <p className="font-extrabold text-sm text-slate-800 dark:text-white truncate uppercase">{bi.itemName}</p>
-                                                            <p className="text-xs text-slate-400 dark:text-slate-500 font-bold mt-0.5">₹{bi.price} × {bi.quantity} = <span className="text-slate-600 dark:text-slate-300">₹{bi.total}</span></p>
-                                                        </div>
-
-                                                        {/* Quantity controls */}
-                                                        <div className="flex items-center gap-1 bg-slate-50 dark:bg-slate-900/50 rounded-xl p-0.5 border border-slate-100 dark:border-slate-800 flex-shrink-0">
-                                                            <button
-                                                                className="h-9 w-9 flex items-center justify-center rounded-lg text-red-500 active:bg-red-100 dark:active:bg-red-950/30 touch-manipulation"
-                                                                onClick={() => updateQuantity(bi.itemId, -1)}
-                                                            >
-                                                                <Minus className="h-4 w-4" strokeWidth={3} />
-                                                            </button>
-                                                            <span className="w-7 text-center font-black text-base text-slate-800 dark:text-white tabular-nums">{bi.quantity}</span>
-                                                            <button
-                                                                className="h-9 w-9 flex items-center justify-center rounded-lg text-orange-600 dark:text-orange-500 active:bg-orange-100 dark:active:bg-orange-950/30 touch-manipulation"
-                                                                onClick={() => updateQuantity(bi.itemId, 1)}
-                                                            >
-                                                                <Plus className="h-4 w-4" strokeWidth={3} />
-                                                            </button>
-                                                        </div>
-                                                    </motion.div>
+                                                    <CartItem key={bi.itemId} bi={bi} onUpdateQuantity={updateQuantity} />
                                                 ))
                                             )}
                                         </AnimatePresence>
@@ -602,7 +872,20 @@ export default function BillingScreen() {
                                     {/* Total row */}
                                     <div className="flex items-center justify-between mb-4">
                                         <span className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Grand Total</span>
-                                        <span className="text-3xl font-black tracking-tighter text-gradient-orange">₹{grandTotal.toFixed(0)}</span>
+                                        <div className="overflow-hidden h-10 relative flex items-center">
+                                            <AnimatePresence mode="popLayout" initial={false}>
+                                                <motion.span
+                                                    key={grandTotal}
+                                                    initial={{ y: 30, opacity: 0 }}
+                                                    animate={{ y: 0, opacity: 1 }}
+                                                    exit={{ y: -30, opacity: 0 }}
+                                                    transition={{ duration: 0.3, ease: "easeOut" }}
+                                                    className="text-3xl font-black tracking-tighter text-gradient-orange"
+                                                >
+                                                    ₹{grandTotal.toFixed(0)}
+                                                </motion.span>
+                                            </AnimatePresence>
+                                        </div>
                                     </div>
 
                                     {/* Pay buttons */}
@@ -644,6 +927,8 @@ export default function BillingScreen() {
                 }
             </AnimatePresence >
 
+            {/* ── FLYING ITEMS ANIMATION LAYER ──────────────────── */}
+            <AnimationLayer flyingItems={flyingItems} />
         </>
     );
 }
