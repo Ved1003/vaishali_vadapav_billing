@@ -1,28 +1,43 @@
 import { Capacitor } from '@capacitor/core';
 import { Bill } from '@/types';
 
-/**
- * printBill – Capacitor Android + Desktop printing utility.
- *
- * On Android (native): Calls the AndroidPrint JavascriptInterface injected
- *   by MainActivity, which invokes the Android PrintManager directly.
- * On Desktop (browser): Opens a popup window and triggers window.print().
- */
-export function printBill(bill: Bill): void {
-  const date = new Date(bill.createdAt);
+// ─────────────────────────────────────────────────────────────────────────────
+// Type declarations for the Android JS bridges injected by MainActivity.java
+// ─────────────────────────────────────────────────────────────────────────────
+declare global {
+  interface Window {
+    AndroidPrint?: {
+      printHtml(html: string): void;
+    };
+    AndroidEscPosPrint?: {
+      /** Returns JSON string: { success: boolean, error?: string } */
+      printReceipt(jsonData: string): string;
+      /** Returns true if a USB printer device is currently detected */
+      isPrinterConnected(): boolean;
+      /** Triggers the Android USB permission dialog */
+      requestPrinterPermission(): void;
+    };
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Helper: build receipt HTML (used as fallback for HTML / non-ESC/POS printing)
+// ─────────────────────────────────────────────────────────────────────────────
+function buildReceiptHtml(bill: Bill): string {
+  const date    = new Date(bill.createdAt);
   const dateStr = date.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
   const timeStr = date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
 
   const itemRows = bill.items.map(item => `
-        <tr>
-            <td>${item.itemName}</td>
-            <td style="text-align:center">${item.quantity}</td>
-            <td style="text-align:right">&#8377;${item.price}</td>
-            <td style="text-align:right">&#8377;${item.total}</td>
-        </tr>
-    `).join('');
+      <tr>
+          <td>${item.itemName}</td>
+          <td style="text-align:center">${item.quantity}</td>
+          <td style="text-align:right">&#8377;${item.price}</td>
+          <td style="text-align:right">&#8377;${item.total}</td>
+      </tr>
+  `).join('');
 
-  const html = `<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
@@ -103,37 +118,142 @@ export function printBill(bill: Bill): void {
   <div style="height:40mm"></div>
 </body>
 </html>`;
+}
 
-  const win = window as any;
+// ─────────────────────────────────────────────────────────────────────────────
+// Helper: build the ESC/POS JSON payload expected by AndroidEscPosPrint bridge
+// ─────────────────────────────────────────────────────────────────────────────
+function buildEscPosPayload(bill: Bill): string {
+  const date    = new Date(bill.createdAt);
+  const dateStr = date.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const timeStr = date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+  const items = bill.items.map(item => ({
+    name:  item.itemName,
+    qty:   String(item.quantity),
+    rate:  `\u20B9${item.price}`,
+    total: `\u20B9${item.total}`,
+  }));
+
+  const payload = {
+    billNumber:  String(bill.billNumber),
+    billerName:  bill.billerName,
+    dateStr,
+    timeStr,
+    items,
+    grandTotal:  `\u20B9${bill.totalAmount.toLocaleString('en-IN')}`,
+    paymentMode: bill.paymentMode.toUpperCase(),
+  };
+
+  return JSON.stringify(payload);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// tryEscPosPrint  — attempts USB OTG ESC/POS printing via the native bridge.
+// Returns true if the receipt was sent successfully.
+// ─────────────────────────────────────────────────────────────────────────────
+function tryEscPosPrint(bill: Bill): boolean {
+  const bridge = window.AndroidEscPosPrint;
+  if (!bridge?.printReceipt) return false;
+
+  try {
+    const jsonPayload = buildEscPosPayload(bill);
+    const resultStr   = bridge.printReceipt(jsonPayload);
+    const result      = JSON.parse(resultStr) as { success: boolean; error?: string };
+
+    if (result.success) {
+      console.log('[printBill] ESC/POS print successful');
+      return true;
+    } else {
+      console.warn('[printBill] ESC/POS error:', result.error);
+      // Show toast-like alert only for actionable errors
+      if (result.error?.includes('permission')) {
+        alert(`USB Printer: ${result.error}`);
+      } else if (result.error?.includes('No USB printer')) {
+        // Silently fall through to HTML print — printer may just not be connected
+        console.warn('[printBill] No USB printer, falling back to HTML print');
+      } else {
+        alert(`Printer error: ${result.error}`);
+      }
+      return false;
+    }
+  } catch (e) {
+    console.error('[printBill] ESC/POS bridge exception:', e);
+    return false;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// tryHtmlPrint  — falls back to AndroidPrint (PrintManager) or browser popup
+// ─────────────────────────────────────────────────────────────────────────────
+function tryHtmlPrint(html: string): void {
   const isAndroidNative = Capacitor.getPlatform() === 'android';
 
   if (isAndroidNative) {
-    const tryPrint = (attempts: number) => {
-      if (win.AndroidPrint?.printHtml) {
-        win.AndroidPrint.printHtml(html);
-        return true;
+    const attempt = (retries: number) => {
+      if (window.AndroidPrint?.printHtml) {
+        window.AndroidPrint.printHtml(html);
+        return;
       }
-      if (attempts > 0) {
-        setTimeout(() => tryPrint(attempts - 1), 100);
+      if (retries > 0) {
+        setTimeout(() => attempt(retries - 1), 100);
       } else {
         alert('Printing unavailable. Please restart the app.');
       }
-      return false;
     };
-
-    // Try immediately, if fails, poll every 100ms for 1 second total
-    if (!tryPrint(10)) {
-      console.warn('[printBill] AndroidPrint bridge not found, polling...');
-    }
+    attempt(10);
   } else {
-    // ── Desktop / Browser path ───────────────────────────────────────
+    // Desktop / browser
     const popup = window.open('', '_blank', 'width=350,height=650');
     if (popup) {
       popup.document.write(html);
       popup.document.close();
       popup.focus();
-      // Reduced delay for faster printing
       setTimeout(() => { popup.print(); }, 100);
     }
   }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// printBill — main entry point
+//
+// Strategy on Android:
+//   1. Try ESC/POS USB OTG print  (direct, no dialog, instant)
+//   2. Fall back to HTML PrintManager print (system dialog)
+//
+// Strategy on desktop:
+//   - Opens a print popup
+// ─────────────────────────────────────────────────────────────────────────────
+export function printBill(bill: Bill): void {
+  const isAndroidNative = Capacitor.getPlatform() === 'android';
+
+  if (isAndroidNative) {
+    // Try ESC/POS first
+    const escPosOk = tryEscPosPrint(bill);
+
+    if (!escPosOk) {
+      // Fall back to HTML / PrintManager
+      console.log('[printBill] Falling back to HTML print');
+      const html = buildReceiptHtml(bill);
+      tryHtmlPrint(html);
+    }
+  } else {
+    // Desktop: always HTML popup
+    const html = buildReceiptHtml(bill);
+    tryHtmlPrint(html);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Utility: check printer status from UI (call from settings/status screen)
+// ─────────────────────────────────────────────────────────────────────────────
+export function isUsbPrinterConnected(): boolean {
+  return window.AndroidEscPosPrint?.isPrinterConnected?.() ?? false;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Utility: request USB permission (call from a "Connect Printer" button)
+// ─────────────────────────────────────────────────────────────────────────────
+export function requestUsbPrinterPermission(): void {
+  window.AndroidEscPosPrint?.requestPrinterPermission?.();
 }

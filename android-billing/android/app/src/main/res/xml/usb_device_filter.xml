@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    USB printer device filter.
+    Class 7 = Printer class (USB-IF spec).
+    Sub-class 1 = Printer sub-class.
+    Protocol 2 = Bi-directional (most ESC/POS printers).
+
+    Leave class/sub-class/protocol as -1 (any) so we catch
+    printers that don't strictly follow the spec (many cheap
+    thermal printers identify as vendor-specific class 255).
+-->
+<resources>
+    <!-- Standard USB Printer class -->
+    <usb-device class="7" subclass="1" protocol="2" />
+    <!-- Vendor-specific / unclassified (most cheap thermal printers) -->
+    <usb-device class="255" />
+    <!-- Completely unspecified – catch-all for printers that report class 0 -->
+    <usb-device />
+</resources>

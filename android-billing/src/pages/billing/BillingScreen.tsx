@@ -303,16 +303,31 @@ export default function BillingScreen() {
 
     const loadMenu = async () => {
         try {
+            const cachedItems = localStorage.getItem('__cached_items');
+            const cachedFridge = localStorage.getItem('__cached_fridge');
+            
+            if (cachedItems) setItems(JSON.parse(cachedItems));
+            if (cachedFridge) setFridgeItems(JSON.parse(cachedFridge));
+            
+            // If cache exists, app is instantly ready without blocking
+            if (cachedItems) setIsLoading(false);
+
             const [its, fridge] = await Promise.all([getActiveItemsApi(), getActiveFridgeItemsApi()]);
+            
             setItems(its);
             setFridgeItems(fridge);
+            
+            localStorage.setItem('__cached_items', JSON.stringify(its));
+            localStorage.setItem('__cached_fridge', JSON.stringify(fridge));
         } catch (error) {
             console.error(error);
+        } finally {
+            setIsLoading(false);
         }
     };
 
     useEffect(() => {
-        loadMenu().finally(() => setIsLoading(false));
+        loadMenu();
     }, []);
 
     // ── Pull to refresh handlers ────────────────────────────

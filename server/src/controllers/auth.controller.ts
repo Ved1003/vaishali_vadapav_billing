@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { User } from '../models/User.model';
 import { generateTokenPair, generateToken, verifyToken } from '../utils/jwt';
-
+import { emitEvent } from '../utils/socket';
 export const login = async (req: Request, res: Response): Promise<void> => {
     try {
         const { username, password } = req.body;
@@ -56,7 +56,6 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         await user.save();
 
         // Broadcast event via WebSocket
-        const { emitEvent } = require('../utils/socket');
         emitEvent('USER_UPDATED', {
             id: user._id,
             name: user.name,
@@ -239,7 +238,6 @@ export const logout = async (req: Request, res: Response): Promise<void> => {
                 await user.save();
 
                 // Broadcast event via WebSocket
-                const { emitEvent } = require('../utils/socket');
                 emitEvent('USER_UPDATED', {
                     id: user._id,
                     isOnline: false,
