@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { BillerLayout } from "@/components/layouts/BillerLayout";
+import { AuthLoader } from "@/components/AuthLoader";
 import { lazy, Suspense, useEffect } from "react";
 import { Capacitor } from "@capacitor/core";
 import { StatusBar, Style } from "@capacitor/status-bar";
@@ -46,6 +47,7 @@ const App = () => {
                     <TooltipProvider>
                         <Toaster />
                         <Sonner />
+                        <AuthLoader />
                         <BrowserRouter>
                             <Suspense fallback={<LoadingFallback />}>
                                 <Routes>

@@ -5,8 +5,11 @@ import { loginApi, verifyTokenApi, refreshTokenApi, logoutApi } from '@/services
 interface AuthContextType {
   user: AuthUser | null;
   isLoading: boolean;
+  isLoggingIn: boolean;
+  isLoggingOut: boolean;
+  networkSlow: boolean;
   login: (username: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  logout: () => Promise<void>;
+  logout: (silent?: boolean) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -52,6 +55,9 @@ const isTokenExpiring = (token: string): boolean => {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [networkSlow, setNetworkSlow] = useState(false);
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const isRefreshingRef = useRef(false);
 
@@ -113,12 +119,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return true;
       }
 
-      // Refresh token expired, logout user
-      await logout();
+      // Refresh token expired, logout user silently
+      await logout(true);
       return false;
     } catch (error) {
       console.error('Token refresh failed:', error);
-      await logout();
+      await logout(true);
       return false;
     } finally {
       isRefreshingRef.current = false;
@@ -227,16 +233,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (storedUser.refreshToken) {
             const refreshed = await refreshAccessToken();
             if (!refreshed && isMounted) {
-              await logout();
+              await logout(true);
             }
           } else if (isMounted) {
-            await logout();
+            await logout(true);
           }
         }
       } catch (error) {
         console.error('Initialization error:', error);
         if (isMounted) {
-          await logout();
+          await logout(true);
           setIsLoading(false);
         }
       } finally {
@@ -277,6 +283,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (username: string, password: string): Promise<{ success: boolean; error?: string }> => {
     setIsLoading(true);
+    setIsLoggingIn(true);
+    setNetworkSlow(false);
+
+    const warningTimeout = setTimeout(() => {
+      setNetworkSlow(true);
+    }, 5000);
+
     try {
       const authUser = await loginApi(username, password);
       if (authUser) {
@@ -290,16 +303,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const errorMessage = error?.message || error?.error || 'Login failed. Please try again.';
       return { success: false, error: errorMessage };
     } finally {
+      clearTimeout(warningTimeout);
       setIsLoading(false);
+      setIsLoggingIn(false);
+      setNetworkSlow(false);
     }
   };
 
-  const logout = async (): Promise<void> => {
+  const logout = async (silent: boolean = false): Promise<void> => {
+    let warningTimeout: NodeJS.Timeout | null = null;
+    
+    if (!silent) {
+      setIsLoggingOut(true);
+      setNetworkSlow(false);
+      warningTimeout = setTimeout(() => {
+        setNetworkSlow(true);
+      }, 5000);
+    }
+
     try {
       await logoutApi();
     } catch (error) {
       console.error('Logout API error:', error);
     } finally {
+      if (warningTimeout) clearTimeout(warningTimeout);
       setUser(null);
       clearStoredAuth();
 
@@ -308,11 +335,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         clearInterval(refreshIntervalRef.current);
         refreshIntervalRef.current = null;
       }
+      
+      if (!silent) {
+        setIsLoggingOut(false);
+        setNetworkSlow(false);
+      }
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, isLoggingIn, isLoggingOut, networkSlow, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

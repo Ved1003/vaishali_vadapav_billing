@@ -10,6 +10,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AdminLayout } from "@/components/layouts/AdminLayout";
 import { BillerLayout } from "@/components/layouts/BillerLayout";
+import { AuthLoader } from "@/components/AuthLoader";
 
 const LoginPage = lazy(() => import("./pages/LoginPage"));
 const AdminDashboard = lazy(() => import("./pages/admin/Dashboard"));
@@ -50,6 +51,7 @@ const App = () => {
             <TooltipProvider>
               <Toaster />
               <Sonner />
+              <AuthLoader />
               <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
                 <Suspense fallback={<LoadingFallback />}>
                   <Routes>
