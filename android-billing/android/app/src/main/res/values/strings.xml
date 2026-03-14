@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Tanmay Billing</string>
-    <string name="title_activity_main">Tanmay Billing</string>
+    <string name="app_name">Vaishali Vadapav</string>
+    <string name="title_activity_main">Vaishali Vadapav</string>
     <string name="package_name">com.tanmay.billing</string>
     <string name="custom_url_scheme">com.tanmay.billing</string>
 </resources>

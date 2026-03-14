@@ -24,7 +24,7 @@ declare global {
 // Helper: build receipt HTML (used as fallback for HTML / non-ESC/POS printing)
 // ─────────────────────────────────────────────────────────────────────────────
 function buildReceiptHtml(bill: Bill): string {
-  const date    = new Date(bill.createdAt);
+  const date = new Date(bill.createdAt);
   const dateStr = date.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
   const timeStr = date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
 
@@ -32,8 +32,8 @@ function buildReceiptHtml(bill: Bill): string {
       <tr>
           <td>${item.itemName}</td>
           <td style="text-align:center">${item.quantity}</td>
-          <td style="text-align:right">&#8377;${item.price}</td>
-          <td style="text-align:right">&#8377;${item.total}</td>
+          <td style="text-align:right">${item.price}</td>
+          <td style="text-align:right">${item.total}</td>
       </tr>
   `).join('');
 
@@ -41,54 +41,73 @@ function buildReceiptHtml(bill: Bill): string {
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=576, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>Bill #${bill.billNumber}</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    font-family: 'Courier New', monospace;
-    font-size: 12px;
-    width: 72mm;
-    max-width: 72mm;
-    padding: 4mm;
+  html, body {
+    width: 576px;
+    margin: 0;
+    padding: 0;
+    background: #fff;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 24px;
     color: #000;
+  }
+  .receipt-container {
+    width: 576px;
+    padding: 8px 16px 24px 16px;
   }
   .center { text-align: center; }
   .bold { font-weight: bold; }
-  .large { font-size: 15px; }
-  .spacer { margin: 4px 0; }
-  .dashed { border-top: 1px dashed #000; margin: 6px 0; }
-  table { width: 100%; border-collapse: collapse; }
-  th { font-weight: bold; border-bottom: 1px dashed #000; padding: 3px 0; font-size: 11px; }
-  td { padding: 2px 0; font-size: 11px; }
-  .total-row td { font-weight: bold; font-size: 13px; padding-top: 6px; }
-  .footer { text-align: center; margin-top: 12px; font-size: 11px; }
+  .large { font-size: 32px; }
+  .spacer { margin: 8px 0; }
+  .dashed { border-top: 2px dashed #000; margin: 10px 0; }
+  .row { width: 100%; display: flex; justify-content: space-between; }
+  .row-left  { text-align: left; }
+  .row-right { text-align: right; }
+  table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  col.col-item { width: 44%; }
+  col.col-qty  { width: 14%; }
+  col.col-rate { width: 21%; }
+  col.col-amt  { width: 21%; }
+  th { font-weight: bold; border-bottom: 2px dashed #000; padding: 6px 0; font-size: 24px; }
+  td { padding: 4px 0; font-size: 24px; word-break: break-word; }
+  .total-row td { font-weight: bold; font-size: 28px; padding-top: 12px; border-top: 2px dashed #000; }
+  .footer { text-align: center; margin-top: 24px; font-size: 24px; }
   @media print {
-    @page { margin: 0; size: 72mm auto; }
-    body { padding: 2mm; }
+    @page { margin: 0; }
+    html, body { width: 576px; margin: 0; }
   }
 </style>
 </head>
 <body>
-  <div class="center">
-    <div class="bold large">Vaishali Vadapav &amp; Snacks Center</div>
-    <div class="spacer">Katepuram Chowk, Pimple Gurav,</div>
+  <div class="receipt-container">
+    <div class="center">
+      <div class="bold large">Vaishali Vadapav &amp; Snacks Center</div>
+      <div class="spacer">Katepuram Chowk, Pimple Gurav,</div>
     <div>Pimpri Chinchwad, Pune 411061</div>
     <div>Ph: +91 9420597911 / +91 7755974006</div>
   </div>
 
   <div class="dashed"></div>
-  <div style="display:flex; justify-content:space-between">
-    <span>Bill No: <strong>${bill.billNumber}</strong></span>
-    <span>${dateStr}</span>
+  <div class="row">
+    <span class="row-left">Bill No: <strong>${bill.billNumber}</strong></span>
+    <span class="row-right">${dateStr}</span>
   </div>
-  <div style="display:flex; justify-content:space-between">
-    <span>Biller: ${bill.billerName}</span>
-    <span>${timeStr}</span>
+  <div class="row">
+    <span class="row-left">Biller: ${bill.billerName}</span>
+    <span class="row-right">${timeStr}</span>
   </div>
   <div class="dashed"></div>
 
   <table>
+    <colgroup>
+      <col class="col-item" />
+      <col class="col-qty" />
+      <col class="col-rate" />
+      <col class="col-amt" />
+    </colgroup>
     <thead>
       <tr>
         <th style="text-align:left">Item</th>
@@ -101,21 +120,21 @@ function buildReceiptHtml(bill: Bill): string {
       ${itemRows}
       <tr class="total-row">
         <td colspan="3">Grand Total</td>
-        <td style="text-align:right">&#8377;${bill.totalAmount.toLocaleString('en-IN')}</td>
+        <td style="text-align:right">Rs.${bill.totalAmount.toLocaleString('en-IN')}</td>
       </tr>
     </tbody>
   </table>
 
   <div class="dashed"></div>
-  <div style="display:flex; justify-content:space-between">
-    <span>Payment</span>
-    <span class="bold">${bill.paymentMode.toUpperCase()}</span>
+  <div class="row">
+    <span class="row-left">Payment Method</span>
+    <span class="row-right bold">${bill.paymentMode.toUpperCase()}</span>
   </div>
 
   <div class="footer">
-    <div class="bold">&#9733; Thank You! Visit Again &#9733;</div>
+    <div class="bold">* Thank You! Visit Again *</div>
   </div>
-  <div style="height:40mm"></div>
+  </div>
 </body>
 </html>`;
 }
@@ -124,24 +143,24 @@ function buildReceiptHtml(bill: Bill): string {
 // Helper: build the ESC/POS JSON payload expected by AndroidEscPosPrint bridge
 // ─────────────────────────────────────────────────────────────────────────────
 function buildEscPosPayload(bill: Bill): string {
-  const date    = new Date(bill.createdAt);
+  const date = new Date(bill.createdAt);
   const dateStr = date.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
   const timeStr = date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
 
   const items = bill.items.map(item => ({
-    name:  item.itemName,
-    qty:   String(item.quantity),
-    rate:  `\u20B9${item.price}`,
-    total: `\u20B9${item.total}`,
+    name: item.itemName,
+    qty: String(item.quantity),
+    rate: `${item.price}`,
+    total: `${item.total}`,
   }));
 
   const payload = {
-    billNumber:  String(bill.billNumber),
-    billerName:  bill.billerName,
+    billNumber: String(bill.billNumber),
+    billerName: bill.billerName,
     dateStr,
     timeStr,
     items,
-    grandTotal:  `\u20B9${bill.totalAmount.toLocaleString('en-IN')}`,
+    grandTotal: `Rs.${bill.totalAmount.toLocaleString('en-IN')}`,
     paymentMode: bill.paymentMode.toUpperCase(),
   };
 
@@ -158,8 +177,8 @@ function tryEscPosPrint(bill: Bill): boolean {
 
   try {
     const jsonPayload = buildEscPosPayload(bill);
-    const resultStr   = bridge.printReceipt(jsonPayload);
-    const result      = JSON.parse(resultStr) as { success: boolean; error?: string };
+    const resultStr = bridge.printReceipt(jsonPayload);
+    const result = JSON.parse(resultStr) as { success: boolean; error?: string };
 
     if (result.success) {
       console.log('[printBill] ESC/POS print successful');

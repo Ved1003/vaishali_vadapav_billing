@@ -52,8 +52,18 @@ const corsOptions: cors.CorsOptions = {
         if (!origin) return callback(null, true);
 
         // Allow local/mobile origins in addition to the whitelist
-        const defaultAllowed = ['capacitor://localhost', 'http://localhost', 'http://localhost:8080', 'http://localhost:5173'];
-        if (defaultAllowed.includes(origin) || allowedOrigins.includes(origin)) {
+        const defaultAllowed = [
+            'capacitor://localhost', 
+            'http://localhost', 
+            'http://localhost:8080', 
+            'http://localhost:5173',
+            'https://vaishali-vadapav-billing.vercel.app'
+        ];
+        
+        // Also allow vercel preview deployments
+        const isVercel = origin.endsWith('.vercel.app') || origin.includes('vaishali-vadapav');
+
+        if (defaultAllowed.includes(origin) || allowedOrigins.includes(origin) || isVercel) {
             return callback(null, true);
         }
 

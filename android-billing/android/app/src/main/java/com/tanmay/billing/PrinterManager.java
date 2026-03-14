@@ -18,11 +18,11 @@ import java.util.HashMap;
  * PrinterManager — USB OTG ESC/POS printer helper.
  *
  * Usage:
- *   PrinterManager pm = new PrinterManager(context);
- *   if (pm.connect()) {
- *       pm.printReceipt(bill);
- *       pm.disconnect();
- *   }
+ * PrinterManager pm = new PrinterManager(context);
+ * if (pm.connect()) {
+ * pm.printReceipt(bill);
+ * pm.disconnect();
+ * }
  */
 public class PrinterManager {
 
@@ -32,16 +32,17 @@ public class PrinterManager {
     private static final int TIMEOUT_MS = 5000;
 
     // ── ESC/POS command bytes ───────────────────────────────────────────
-    private static final byte[] ESC_INIT          = { 0x1B, 0x40 };           // Initialize printer
-    private static final byte[] ESC_ALIGN_LEFT    = { 0x1B, 0x61, 0x00 };     // Left align
-    private static final byte[] ESC_ALIGN_CENTER  = { 0x1B, 0x61, 0x01 };     // Center align
-    private static final byte[] ESC_ALIGN_RIGHT   = { 0x1B, 0x61, 0x02 };     // Right align
-    private static final byte[] ESC_BOLD_ON       = { 0x1B, 0x45, 0x01 };     // Bold on
-    private static final byte[] ESC_BOLD_OFF      = { 0x1B, 0x45, 0x00 };     // Bold off
-    private static final byte[] ESC_DOUBLE_SIZE   = { 0x1D, 0x21, 0x11 };     // Double width+height
-    private static final byte[] ESC_NORMAL_SIZE   = { 0x1D, 0x21, 0x00 };     // Normal size
-    private static final byte[] LF                = { 0x0A };                  // Line feed
-    private static final byte[] ESC_CUT           = { 0x1D, 0x56, 0x42, 0x00 }; // Partial cut
+    private static final byte[] ESC_INIT = { 0x1B, 0x40 }; // Initialize printer
+    private static final byte[] ESC_STANDARD = { 0x1B, 0x21, 0x00 }; // Standard Font A
+    private static final byte[] ESC_ALIGN_LEFT = { 0x1B, 0x61, 0x00 }; // Left align
+    private static final byte[] ESC_ALIGN_CENTER = { 0x1B, 0x61, 0x01 }; // Center align
+    private static final byte[] ESC_ALIGN_RIGHT = { 0x1B, 0x61, 0x02 }; // Right align
+    private static final byte[] ESC_BOLD_ON = { 0x1B, 0x45, 0x01 }; // Bold on
+    private static final byte[] ESC_BOLD_OFF = { 0x1B, 0x45, 0x00 }; // Bold off
+    private static final byte[] ESC_DOUBLE_SIZE = { 0x1D, 0x21, 0x11 }; // Double width+height
+    private static final byte[] ESC_NORMAL_SIZE = { 0x1D, 0x21, 0x00 }; // Normal size
+    private static final byte[] LF = { 0x0A }; // Line feed
+    private static final byte[] ESC_CUT = { 0x1D, 0x56, 0x42, 0x00 }; // Partial cut
 
     private final UsbManager usbManager;
     private UsbDevice printerDevice;
@@ -60,7 +61,8 @@ public class PrinterManager {
      * Returns null if no printer is found or UsbManager is unavailable.
      */
     public UsbDevice findPrinterDevice() {
-        if (usbManager == null) return null;
+        if (usbManager == null)
+            return null;
         HashMap<String, UsbDevice> deviceList = usbManager.getDeviceList();
         for (UsbDevice device : deviceList.values()) {
             if (isPrinterDevice(device)) {
@@ -78,13 +80,16 @@ public class PrinterManager {
      * Also accepts vendor-specific (255) as many cheap thermal printers use it.
      */
     private boolean isPrinterDevice(UsbDevice device) {
-        if (device.getDeviceClass() == UsbConstants.USB_CLASS_PRINTER) return true;
+        if (device.getDeviceClass() == UsbConstants.USB_CLASS_PRINTER)
+            return true;
 
         for (int i = 0; i < device.getInterfaceCount(); i++) {
             UsbInterface iface = device.getInterface(i);
-            if (iface.getInterfaceClass() == UsbConstants.USB_CLASS_PRINTER) return true;
+            if (iface.getInterfaceClass() == UsbConstants.USB_CLASS_PRINTER)
+                return true;
             // Vendor-specific — many cheap thermal printers
-            if (iface.getInterfaceClass() == UsbConstants.USB_CLASS_VENDOR_SPEC) return true;
+            if (iface.getInterfaceClass() == UsbConstants.USB_CLASS_VENDOR_SPEC)
+                return true;
         }
         return false;
     }
@@ -113,8 +118,7 @@ public class PrinterManager {
         UsbInterface printerInterface = null;
         UsbEndpoint bulkOut = null;
 
-        outer:
-        for (int i = 0; i < device.getInterfaceCount(); i++) {
+        outer: for (int i = 0; i < device.getInterfaceCount(); i++) {
             UsbInterface iface = device.getInterface(i);
             for (int j = 0; j < iface.getEndpointCount(); j++) {
                 UsbEndpoint ep = iface.getEndpoint(j);
@@ -180,6 +184,7 @@ public class PrinterManager {
 
     /**
      * Sends raw bytes to the printer.
+     * 
      * @return true if all bytes were written successfully.
      */
     public boolean writeRaw(byte[] data) {
@@ -199,50 +204,53 @@ public class PrinterManager {
     // ── ESC/POS helpers ────────────────────────────────────────────────
 
     private void append(ByteArrayOutputStream bos, byte[] bytes) {
-        try { bos.write(bytes); } catch (IOException ignored) {}
+        try {
+            bos.write(bytes);
+        } catch (IOException ignored) {
+        }
     }
 
     private void appendText(ByteArrayOutputStream bos, String text) {
-        try { bos.write(text.getBytes(StandardCharsets.UTF_8)); } catch (IOException ignored) {}
+        try {
+            bos.write(text.getBytes(StandardCharsets.UTF_8));
+        } catch (IOException ignored) {
+        }
     }
 
     /** Pads or truncates a string to exactly `width` characters. */
     private String padRight(String s, int width) {
-        if (s == null) s = "";
-        if (s.length() >= width) return s.substring(0, width);
+        if (s == null)
+            s = "";
+        if (s.length() >= width)
+            return s.substring(0, width);
         StringBuilder sb = new StringBuilder(s);
-        while (sb.length() < width) sb.append(' ');
+        while (sb.length() < width)
+            sb.append(' ');
         return sb.toString();
     }
 
     /** Right-aligns a string within `width` characters. */
     private String padLeft(String s, int width) {
-        if (s == null) s = "";
-        if (s.length() >= width) return s.substring(0, width);
+        if (s == null)
+            s = "";
+        if (s.length() >= width)
+            return s.substring(0, width);
         StringBuilder sb = new StringBuilder();
-        while (sb.length() < width - s.length()) sb.append(' ');
+        while (sb.length() < width - s.length())
+            sb.append(' ');
         sb.append(s);
         return sb.toString();
     }
 
-    /** Creates a dashed separator line of 32 chars (typical 58mm paper). */
+    /** Creates an exact 48-character dashed line. */
     private String dashLine() {
-        return "--------------------------------\n";
+        return "------------------------------------------------\n";
     }
 
     // ── High-level receipt printing ─────────────────────────────────────
 
     /**
      * Builds and prints a full ESC/POS receipt for the given bill data.
-     *
-     * @param billNumber   e.g. "1042"
-     * @param billerName   e.g. "Tanmay"
-     * @param dateStr      e.g. "11/03/2026"
-     * @param timeStr      e.g. "04:30 PM"
-     * @param items        array of String[4]: [name, qty, rate, total]
-     * @param grandTotal   e.g. "₹540"
-     * @param paymentMode  e.g. "CASH"
-     * @return true if printing succeeded
      */
     public boolean printReceipt(
             String billNumber,
@@ -260,8 +268,9 @@ public class PrinterManager {
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
 
-        // Initialize
+        // Initialize and force standard 80mm Font A
         append(bos, ESC_INIT);
+        append(bos, ESC_STANDARD);
 
         // ── Header ─────────────────────────────────────────────────────
         append(bos, ESC_ALIGN_CENTER);
@@ -279,48 +288,49 @@ public class PrinterManager {
         // ── Bill Info ──────────────────────────────────────────────────
         append(bos, ESC_ALIGN_LEFT);
         appendText(bos, dashLine());
-        // "Bill No: 1042        11/03/2026"
+
         String billLine = "Bill No: " + billNumber;
-        appendText(bos, padRight(billLine, 20) + padLeft(dateStr, 12) + "\n");
-        // "Biller: Tanmay           04:30 PM"
+        appendText(bos, padRight(billLine, 28) + padLeft(dateStr, 20) + "\n");
+
         String billerLine = "Biller: " + billerName;
-        appendText(bos, padRight(billerLine, 20) + padLeft(timeStr, 12) + "\n");
+        appendText(bos, padRight(billerLine, 28) + padLeft(timeStr, 20) + "\n");
         appendText(bos, dashLine());
 
         // ── Column headers ─────────────────────────────────────────────
         append(bos, ESC_BOLD_ON);
-        // Item(16) Qty(4) Rate(6) Amt(6)
-        appendText(bos, padRight("Item", 16)
-                + padLeft("Qty", 4)
-                + padLeft("Rate", 6)
-                + padLeft("Amt", 6) + "\n");
+        // Item(21) Qty(5) Rate(10) Amt(12) => 48 chars total
+        appendText(bos, padRight("Item", 21)
+                + padLeft("Qty", 5)
+                + padLeft("Rate", 10)
+                + padLeft("Amt", 12) + "\n");
         append(bos, ESC_BOLD_OFF);
         appendText(bos, dashLine());
 
         // ── Items ──────────────────────────────────────────────────────
         if (items != null) {
             for (String[] item : items) {
-                String name  = item.length > 0 ? item[0] : "";
-                String qty   = item.length > 1 ? item[1] : "";
-                String rate  = item.length > 2 ? item[2] : "";
+                String name = item.length > 0 ? item[0] : "";
+                String qty = item.length > 1 ? item[1] : "";
+                String rate = item.length > 2 ? item[2] : "";
                 String total = item.length > 3 ? item[3] : "";
 
-                // Truncate long name
-                if (name.length() > 16) name = name.substring(0, 15) + ".";
+                // Truncate long name to fit 21 chars
+                if (name.length() > 21)
+                    name = name.substring(0, 20) + ".";
 
-                appendText(bos, padRight(name, 16)
-                        + padLeft(qty, 4)
-                        + padLeft(rate, 6)
-                        + padLeft(total, 6) + "\n");
+                appendText(bos, padRight(name, 21)
+                        + padLeft(qty, 5)
+                        + padLeft(rate, 10)
+                        + padLeft(total, 12) + "\n");
             }
         }
 
         // ── Grand Total ────────────────────────────────────────────────
         appendText(bos, dashLine());
         append(bos, ESC_BOLD_ON);
-        appendText(bos, padRight("Grand Total", 20) + padLeft(grandTotal, 12) + "\n");
+        appendText(bos, padRight("Grand Total", 30) + padLeft(grandTotal, 18) + "\n");
         append(bos, ESC_BOLD_OFF);
-        appendText(bos, padRight("Payment", 20) + padLeft(paymentMode, 12) + "\n");
+        appendText(bos, padRight("Payment Method", 30) + padLeft(paymentMode, 18) + "\n");
         appendText(bos, dashLine());
 
         // ── Footer ─────────────────────────────────────────────────────
@@ -328,9 +338,8 @@ public class PrinterManager {
         append(bos, ESC_BOLD_ON);
         appendText(bos, "* Thank You! Visit Again *\n");
         append(bos, ESC_BOLD_OFF);
-        append(bos, LF);
-        append(bos, LF);
-        append(bos, LF);
+
+        // Reduced paper feed to minimum 1 LF to eliminate gap on subsequent receipts
         append(bos, LF);
 
         // Paper cut
