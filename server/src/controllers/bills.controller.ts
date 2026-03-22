@@ -104,7 +104,7 @@ export const getBills = async (req: Request, res: Response): Promise<void> => {
         console.log(`[GetBills] Page: ${page}, Limit: ${limit}, Skip: ${skip}`);
 
         // Fetch paginated data and stats in parallel
-        const [bills, total, aggStats] = await Promise.all([
+        const [bills, total, aggStats, topItems, trendData] = await Promise.all([
             Bill.find(query)
                 .sort({ createdAt: -1 })
                 .skip(skip)
@@ -122,6 +122,46 @@ export const getBills = async (req: Request, res: Response): Promise<void> => {
                         upiPayments: {
                             $sum: { $cond: [{ $eq: ['$paymentMode', 'upi'] }, '$totalAmount', 0] }
                         }
+                    }
+                }
+            ]),
+            // Top 5 selling items by revenue
+            Bill.aggregate([
+                { $match: query },
+                { $unwind: '$items' },
+                {
+                    $group: {
+                        _id: '$items.itemName',
+                        revenue: { $sum: '$items.total' },
+                        quantity: { $sum: '$items.quantity' }
+                    }
+                },
+                { $sort: { revenue: -1 } },
+                { $limit: 5 },
+                {
+                    $project: {
+                        _id: 0,
+                        name: '$_id',
+                        revenue: 1,
+                        quantity: 1
+                    }
+                }
+            ]),
+            // Daily trend data
+            Bill.aggregate([
+                { $match: query },
+                {
+                    $group: {
+                        _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+                        revenue: { $sum: '$totalAmount' }
+                    }
+                },
+                { $sort: { _id: 1 } },
+                {
+                    $project: {
+                        _id: 0,
+                        date: '$_id',
+                        revenue: 1
                     }
                 }
             ])
@@ -143,7 +183,9 @@ export const getBills = async (req: Request, res: Response): Promise<void> => {
             },
             stats: {
                 ...stats,
-                count: total
+                count: total,
+                topItems: topItems || [],
+                trendData: trendData || []
             }
         });
     } catch (error) {

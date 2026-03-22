@@ -61,6 +61,8 @@ export interface BillingStats {
   cashCollected: number;
   upiPayments: number;
   count: number;
+  topItems: Array<{ name: string; revenue: number; quantity: number }>;
+  trendData: Array<{ date: string; revenue: number }>;
 }
 
 export interface PaginatedBills {

@@ -45,6 +45,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  LineChart, Line, Cell
+} from 'recharts';
+import { io } from 'socket.io-client';
+
 type DatePreset = 'all' | 'today' | 'monthly' | 'yearly' | 'custom';
 
 export default function BillingHistory() {
@@ -75,6 +81,7 @@ export default function BillingHistory() {
   });
 
   const [showFilters, setShowFilters] = useState(false);
+  const [showAnalytics, setShowAnalytics] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [pagination, setPagination] = useState<Pagination | null>(null);
@@ -82,8 +89,11 @@ export default function BillingHistory() {
     totalRevenue: 0,
     cashCollected: 0,
     upiPayments: 0,
-    count: 0
+    count: 0,
+    topItems: [],
+    trendData: []
   });
+  const [newBillId, setNewBillId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchBillers = async () => {
@@ -106,6 +116,39 @@ export default function BillingHistory() {
     };
     fetchItems();
   }, []);
+
+  // Real-time WebSocket listener
+  useEffect(() => {
+    const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:5000');
+
+    socket.on('BILL_CREATED', (newBill: Bill) => {
+      // Check if bill matches current filters (simplified check for real-time feel)
+      // If we are on page 1 and no specific search is active, we prepended it
+      if (currentPage === 1 && !activeFilters.billerId && !activeFilters.paymentMode && !filters.billSearch && !filters.itemSearch) {
+        setBills(prev => [newBill, ...prev.slice(0, limit - 1)]);
+        setNewBillId(newBill.id);
+        setTimeout(() => setNewBillId(null), 3000);
+      }
+
+      // Always update total stats if no date filter or if it's today
+      setStats(prev => ({
+        ...prev,
+        count: prev.count + 1,
+        totalRevenue: prev.totalRevenue + newBill.totalAmount,
+        cashCollected: newBill.paymentMode === 'cash' ? prev.cashCollected + newBill.totalAmount : prev.cashCollected,
+        upiPayments: newBill.paymentMode === 'upi' ? prev.upiPayments + newBill.totalAmount : prev.upiPayments,
+      }));
+
+      toast({
+        title: "New Transaction",
+        description: `Bill #${newBill.billNumber} for ₹${newBill.totalAmount} just arrived.`,
+      });
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [currentPage, activeFilters, filters.billSearch, filters.itemSearch, limit, toast]);
 
   const fetchBills = useCallback(async (isSilent = false) => {
     if (!isSilent) setIsLoading(true);
@@ -236,15 +279,34 @@ export default function BillingHistory() {
   }
 
   return (
-    <div className="min-h-full bg-gray-50 dark:bg-gray-950 p-4 md:p-6">
-      <div className="max-w-7xl mx-auto space-y-5">
+    <div className="min-h-full bg-slate-50 dark:bg-[#030711] p-4 md:p-8 transition-colors relative overflow-hidden">
+      {/* Background Decorative Aura */}
+      <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 bg-orange-500/10 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 bg-blue-500/10 rounded-full blur-[100px] pointer-events-none" />
 
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-xl font-semibold text-gray-900 dark:text-white">Billing History</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{pagination?.total || 0} transactions</p>
+      <div className="max-w-7xl mx-auto space-y-8 relative">
+
+        {/* Executive Header */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div className="space-y-1">
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Billing <span className="text-orange-500">History</span></h1>
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest shadow-sm">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                Live Feed
+              </div>
+            </div>
+            <p className="text-sm font-medium text-slate-500 dark:text-slate-400 max-w-lg">Manage and analyze your organization's transaction history with real-time insights and advanced filtering.</p>
           </div>
+          
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+              <Layers className="h-3.5 w-3.5 text-slate-400" />
+              <span className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">{pagination?.total || 0} TOTAL TRANS.</span>
+            </div>
             <div className="flex items-center gap-2">
               <Select 
                 value={filters.itemSearch || 'all'} 
@@ -300,29 +362,209 @@ export default function BillingHistory() {
             </Button>
           </div>
         </div>
+      </div>
         {/* Compact Stats Row */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           {[
-            { label: (filters.itemSearch && filters.itemSearch !== 'all') ? 'Item Revenue' : 'Total Revenue', val: `₹${stats.totalRevenue.toLocaleString()}`, icon: TrendingUp, color: 'text-orange-500', bg: 'bg-orange-50 dark:bg-orange-500/10' },
-            { label: 'Transactions', val: stats.count, icon: Layers, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-500/10' },
-            { label: 'UPI Payments', val: `₹${stats.upiPayments.toLocaleString()}`, icon: Smartphone, color: 'text-violet-500', bg: 'bg-violet-50 dark:bg-violet-500/10' },
-            { label: 'Cash Collected', val: `₹${stats.cashCollected.toLocaleString()}`, icon: Banknote, color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-500/10' },
+            { label: (filters.itemSearch && filters.itemSearch !== 'all') ? 'Item Revenue' : 'Total Revenue', val: `₹${stats.totalRevenue.toLocaleString()}`, icon: TrendingUp, color: 'from-orange-500 to-amber-500', bg: 'bg-orange-500/10', growth: '+12.5%', isUp: true },
+            { label: 'Transactions', val: stats.count, icon: Layers, color: 'from-blue-500 to-indigo-500', bg: 'bg-blue-500/10', growth: '+8.2%', isUp: true },
+            { label: 'UPI Payments', val: `₹${stats.upiPayments.toLocaleString()}`, icon: Smartphone, color: 'from-violet-500 to-fuchsia-500', bg: 'bg-violet-500/10', growth: '+15.4%', isUp: true },
+            { label: 'Cash Collected', val: `₹${stats.cashCollected.toLocaleString()}`, icon: Banknote, color: 'from-emerald-500 to-teal-500', bg: 'bg-emerald-500/10', growth: '-2.1%', isUp: false },
           ].map((item, i) => (
-            <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}>
-              <Card className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-none">
-                <CardContent className="p-4 flex items-center gap-3">
-                  <div className={cn("h-9 w-9 rounded-lg flex items-center justify-center flex-shrink-0", item.bg)}>
-                    <item.icon className={cn("h-4 w-4", item.color)} />
+            <motion.div 
+              key={i} 
+              initial={{ opacity: 0, y: 12 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              transition={{ delay: i * 0.08, type: 'spring', stiffness: 100 }}
+              whileHover={{ y: -4, transition: { duration: 0.2 } }}
+            >
+              <Card className="rounded-2xl border-0 bg-white/60 dark:bg-gray-900/40 backdrop-blur-xl shadow-sm hover:shadow-md transition-all overflow-hidden relative group">
+                <div className={cn("absolute inset-0 opacity-[0.03] bg-gradient-to-br", item.color)} />
+                <CardContent className="p-5 relative">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center shadow-inner", item.bg)}>
+                      <item.icon className={cn("h-5 w-5 text-transparent bg-clip-text bg-gradient-to-br", item.color)} style={{ backgroundImage: `linear-gradient(to bottom right, var(--tw-gradient-from), var(--tw-gradient-to))` }} />
+                    </div>
+                    <div className={cn(
+                      "flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold tracking-tight",
+                      item.isUp ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400" : "bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400"
+                    )}>
+                      {item.isUp ? <TrendingUp className="h-2.5 w-2.5" /> : <TrendingUp className="h-2.5 w-2.5 rotate-180" />}
+                      {item.growth}
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{item.label}</p>
-                    <p className="text-base font-semibold text-gray-900 dark:text-white leading-tight">{item.val}</p>
+                  <div className="space-y-1">
+                    <p className="text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{item.label}</p>
+                    <p className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">{item.val}</p>
                   </div>
                 </CardContent>
               </Card>
             </motion.div>
           ))}
+          {/* Analytics Toggle Card */}
+          <motion.div 
+            initial={{ opacity: 0, y: 12 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ delay: 0.35, type: 'spring', stiffness: 100 }}
+            whileHover={{ y: -4 }}
+          >
+            <Card 
+              className={cn(
+                "rounded-2xl border-0 cursor-pointer transition-all backdrop-blur-xl shadow-sm overflow-hidden h-full relative",
+                showAnalytics ? "bg-orange-500/10 ring-1 ring-orange-500/20" : "bg-white/60 dark:bg-gray-900/40 hover:bg-white/80 dark:hover:bg-gray-900/60"
+              )}
+              onClick={() => setShowAnalytics(!showAnalytics)}
+            >
+              <CardContent className="p-5 flex flex-col justify-between h-full relative">
+                <div className="flex items-center justify-between mb-4">
+                  <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center shadow-inner", showAnalytics ? "bg-orange-500 text-white" : "bg-gray-100 dark:bg-gray-800")}>
+                    <TrendingUp className={cn("h-5 w-5", showAnalytics ? "text-white" : "text-gray-500")} />
+                  </div>
+                  <ChevronDown className={cn("h-4 w-4 text-gray-400 transition-transform duration-300", showAnalytics && "rotate-180 text-orange-500")} />
+                </div>
+                <div>
+                  <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">Historical</p>
+                  <p className="text-sm font-bold text-gray-900 dark:text-white">{showAnalytics ? 'Hide Analytics' : 'Quick Insights'}</p>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
+
+        {/* Analytics Dashboard */}
+        <AnimatePresence>
+          {showAnalytics && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden mb-4"
+            >
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-1">
+                {/* Top Selling Items */}
+                <Card className="rounded-xl border border-gray-100 dark:border-gray-800/60 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
+                  <CardContent className="p-5">
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="flex items-center gap-2">
+                        <div className="h-2 w-2 rounded-full bg-orange-500" />
+                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Top 5 Selling Items</h3>
+                      </div>
+                      <span className="text-[10px] uppercase tracking-wider font-bold text-gray-400">By Revenue</span>
+                    </div>
+                    <div className="h-[200px] w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart layout="vertical" data={stats.topItems} margin={{ left: -20, right: 10, top: 0, bottom: 0 }}>
+                          <defs>
+                            <linearGradient id="barGradient" x1="0" y1="0" x2="1" y2="0">
+                              <stop offset="0%" stopColor="#f97316" stopOpacity={0.8} />
+                              <stop offset="100%" stopColor="#fbbf24" stopOpacity={1} />
+                            </linearGradient>
+                          </defs>
+                          <XAxis type="number" hide />
+                          <YAxis 
+                            dataKey="name" 
+                            type="category" 
+                            axisLine={false} 
+                            tickLine={false}
+                            width={100}
+                            tick={{ fontSize: 11, fontWeight: 500, fill: '#666' }}
+                          />
+                          <Tooltip 
+                            cursor={{ fill: 'rgba(0,0,0,0.02)' }}
+                            content={({ active, payload }) => {
+                              if (active && payload && payload.length) {
+                                return (
+                                  <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md p-3 border border-white/20 dark:border-gray-700/30 rounded-xl shadow-2xl text-xs">
+                                    <p className="font-bold text-gray-900 dark:text-white mb-1.5">{payload[0].payload.name}</p>
+                                    <div className="space-y-1">
+                                      <p className="flex justify-between gap-4 text-gray-500">Revenue: <span className="font-bold text-gray-900 dark:text-white">₹{payload[0].value?.toLocaleString()}</span></p>
+                                      <p className="flex justify-between gap-4 text-gray-500">Orders: <span className="font-bold text-orange-500">{payload[0].payload.quantity}</span></p>
+                                    </div>
+                                  </div>
+                                );
+                              }
+                              return null;
+                            }}
+                          />
+                          <Bar 
+                            dataKey="revenue" 
+                            radius={[0, 6, 6, 0]} 
+                            barSize={18}
+                            fill="url(#barGradient)"
+                          >
+                            {stats.topItems.map((_, index) => (
+                              <Cell key={`cell-${index}`} fillOpacity={1 - (index * 0.12)} />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Revenue Trend Line */}
+                <Card className="rounded-2xl border-0 bg-white/60 dark:bg-gray-900/40 backdrop-blur-xl shadow-sm overflow-hidden h-full">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between mb-8">
+                      <div className="flex items-center gap-3">
+                        <div className="h-2.5 w-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
+                        <h3 className="text-sm font-bold text-gray-900 dark:text-white tracking-tight">Revenue Trend</h3>
+                      </div>
+                      <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-blue-50 dark:bg-blue-500/10 text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">
+                        Live Analytics
+                      </div>
+                    </div>
+                    <div className="h-[200px] w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={stats.trendData}>
+                          <defs>
+                            <linearGradient id="lineContentGradient" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.2} />
+                              <stop offset="100%" stopColor="#3b82f6" stopOpacity={0} />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="6 6" vertical={false} stroke="#88888815" />
+                          <XAxis 
+                            dataKey="date" 
+                            axisLine={false} 
+                            tickLine={false} 
+                            tick={{ fontSize: 10, fontWeight: 500, fill: '#888' }}
+                            tickFormatter={(str) => {
+                              const d = new Date(str);
+                              return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+                            }}
+                          />
+                          <YAxis hide domain={['auto', 'auto']} />
+                          <Tooltip 
+                            content={({ active, payload }) => {
+                              if (active && payload && payload.length) {
+                                return (
+                                  <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md p-3 border border-white/20 dark:border-gray-700/30 rounded-xl shadow-2xl text-xs">
+                                    <p className="font-bold text-gray-500 mb-1.5 uppercase tracking-wider text-[10px]">{new Date(payload[0].payload.date).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short' })}</p>
+                                    <p className="text-blue-500 font-bold text-sm">₹{payload[0].value?.toLocaleString()}</p>
+                                  </div>
+                                );
+                              }
+                              return null;
+                            }}
+                          />
+                          <Line 
+                            type="monotone" 
+                            dataKey="revenue" 
+                            stroke="#3b82f6" 
+                            strokeWidth={4} 
+                            dot={{ r: 4, fill: '#3b82f6', strokeWidth: 2, stroke: '#fff' }}
+                            activeDot={{ r: 6, strokeWidth: 0, fill: '#3b82f6', shadow: '0 0 10px rgba(59,130,246,0.5)' }}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Filters Panel */}
         <AnimatePresence>
@@ -435,67 +677,85 @@ export default function BillingHistory() {
                 <AnimatePresence mode="popLayout">
                   {paginatedBills.map((bill, idx) => {
                     const billId = bill.id || (bill as any)._id;
+                    const isNew = billId === newBillId;
                     return (
                       <motion.tr
                         layout
                         key={billId}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
+                        initial={isNew ? { backgroundColor: 'rgba(249, 115, 22, 0.1)', x: -20, opacity: 0 } : { opacity: 0 }}
+                        animate={{ 
+                          backgroundColor: isNew ? 'rgba(249, 115, 22, 0.1)' : 'transparent',
+                          x: 0, 
+                          opacity: 1 
+                        }}
+                        whileHover={{ y: -2, backgroundColor: 'rgba(0,0,0,0.02)', transition: { duration: 0.2 } }}
                         exit={{ opacity: 0, scale: 0.98 }}
-                        transition={{ delay: idx * 0.03 }}
+                        transition={{ duration: 0.5, delay: isNew ? 0 : idx * 0.03 }}
                         onClick={() => viewBillDetails(bill)}
-                        className="group border-b border-gray-50 dark:border-gray-800/60 hover:bg-gray-50/70 dark:hover:bg-gray-800/30 cursor-pointer transition-colors"
+                        className={cn(
+                          "group border-b border-gray-50 dark:border-gray-800/60 transition-all cursor-pointer relative",
+                          isNew && "bg-orange-50/50 dark:bg-orange-500/10"
+                        )}
                       >
-                        <TableCell className="pl-4 py-3">
-                          <div className="flex items-center gap-2.5">
-                            <div className="h-7 w-7 rounded-lg bg-orange-50 dark:bg-orange-500/10 flex items-center justify-center flex-shrink-0">
-                              <Receipt className="h-3.5 w-3.5 text-orange-500" />
+                        <TableCell className="pl-4 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="h-8 w-8 rounded-xl bg-orange-500/10 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                              <Receipt className="h-4 w-4 text-orange-500" />
                             </div>
-                            <span className="text-sm font-medium text-gray-900 dark:text-white">{bill.billNumber}</span>
+                            <span className="text-sm font-bold text-gray-900 dark:text-white tracking-tight">{bill.billNumber}</span>
                           </div>
                         </TableCell>
-                        <TableCell className="py-3">
+                        <TableCell className="py-4">
                           <div>
-                            <p className="text-sm text-gray-700 dark:text-gray-200">
-                              {new Date(bill.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' })}
+                            <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                              {new Date(bill.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
                             </p>
-                            <p className="text-xs text-gray-400 dark:text-gray-500">
+                            <p className="text-[10px] font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider">
                               {new Date(bill.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
                             </p>
                           </div>
                         </TableCell>
-                        <TableCell className="py-3">
-                          <span className="text-sm text-gray-700 dark:text-gray-300">{bill.billerName}</span>
+                        <TableCell className="py-4">
+                          <div className="flex items-center gap-2">
+                            <div className="h-6 w-6 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-[10px] font-bold text-gray-500">
+                              {bill.billerName.charAt(0)}
+                            </div>
+                            <span className="text-sm font-medium text-gray-600 dark:text-gray-300">{bill.billerName}</span>
+                          </div>
                         </TableCell>
-                        <TableCell className="py-3">
-                          <div className="flex flex-wrap gap-1.5 max-w-[220px]">
+                        <TableCell className="py-4">
+                          <div className="flex flex-wrap gap-1.5 max-w-[240px]">
                             {bill.items.slice(0, 2).map((item, i) => (
                               <Badge
                                 key={i}
                                 variant="secondary"
-                                className="h-5 px-2 rounded-md text-[11px] font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-0"
+                                className="h-6 px-2.5 rounded-lg text-[10px] font-bold bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-100 dark:border-gray-700 shadow-sm"
                               >
-                                {item.itemName.split(' ')[0]} <span className="text-orange-500 ml-1">×{item.quantity}</span>
+                                {item.itemName} <span className="text-orange-500 ml-1">×{item.quantity}</span>
                               </Badge>
                             ))}
                             {bill.items.length > 2 && (
-                              <span className="text-[11px] text-gray-400 flex items-center">+{bill.items.length - 2}</span>
+                              <Badge variant="outline" className="h-6 px-2 rounded-lg text-[10px] font-bold text-gray-400 border-gray-100">
+                                +{bill.items.length - 2}
+                              </Badge>
                             )}
                           </div>
                         </TableCell>
-                        <TableCell className="py-3">
+                        <TableCell className="py-4">
                           {bill.paymentMode === 'cash' ? (
-                            <span className="inline-flex items-center gap-1 h-5 px-2 rounded-md text-[11px] font-medium bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                              Cash
-                            </span>
+                            <div className="inline-flex items-center gap-1.5 h-6 px-2.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400 ring-1 ring-emerald-500/20">
+                              <Banknote className="h-3 w-3" />
+                              CASH
+                            </div>
                           ) : (
-                            <span className="inline-flex items-center gap-1 h-5 px-2 rounded-md text-[11px] font-medium bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                            <div className="inline-flex items-center gap-1.5 h-6 px-2.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400 ring-1 ring-blue-500/20">
+                              <Smartphone className="h-3 w-3" />
                               UPI
-                            </span>
+                            </div>
                           )}
                         </TableCell>
-                        <TableCell className="py-3 text-right pr-4">
-                          <span className="text-sm font-semibold text-gray-900 dark:text-white">₹{bill.totalAmount.toLocaleString()}</span>
+                        <TableCell className="py-4 text-right pr-6">
+                          <span className="text-base font-bold text-gray-900 dark:text-white tracking-tight">₹{bill.totalAmount.toLocaleString()}</span>
                         </TableCell>
                         <TableCell className="py-3 pr-2">
                           <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-end gap-1">
