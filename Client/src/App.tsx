@@ -30,13 +30,17 @@ const LoadingFallback = () => (
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 60 * 1000,       // 60s – data is fresh, no background refetch
-      gcTime: 5 * 60 * 1000,      // 5 min cache retention after unmount
-      retry: 1,                    // Only one retry on failure (faster UX)
-      refetchOnWindowFocus: false, // Don't refetch every tab switch
+      staleTime: 5 * 60 * 1000,      // 5 min – data stays fresh longer
+      gcTime: 30 * 60 * 1000,       // 30 min cache retention
+      retry: 3,                     // Retry more times on slow networks
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+      refetchOnWindowFocus: false,  // Don't refetch on tab switch (save data/bandwidth)
+      networkMode: 'offlineFirst',  // Allow queries to run from cache even when offline
     },
     mutations: {
-      retry: 0,
+      retry: 2,                     // Retry mutations on flakey network
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+      networkMode: 'offlineFirst',
     },
   },
 });

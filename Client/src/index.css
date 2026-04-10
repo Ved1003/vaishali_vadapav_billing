@@ -211,6 +211,15 @@
   100% { background-position: 200% 0; }
 }
 
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 3s linear infinite;
+}
+
 /* Skeleton shimmer */
 .skeleton-shimmer {
   background: linear-gradient(

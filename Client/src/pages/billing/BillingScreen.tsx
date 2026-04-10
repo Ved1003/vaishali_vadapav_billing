@@ -22,6 +22,9 @@ import PrintReceipt from '@/components/billing/PrintReceipt';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
+import { useOfflineSync } from '@/hooks/use-offline-sync';
+import { Wifi, WifiOff, RefreshCcw } from 'lucide-react';
+
 export default function BillingScreen() {
   const [items, setItems] = useState<Item[]>([]);
   const [billItems, setBillItems] = useState<BillItem[]>([]);
@@ -30,6 +33,7 @@ export default function BillingScreen() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [lastBill, setLastBill] = useState<Bill | null>(null);
+  const { isOnline, pendingCount, addToQueue, syncQueue } = useOfflineSync();
 
   useEffect(() => {
     getActiveItemsApi().then(setItems).finally(() => setIsLoading(false));
@@ -83,27 +87,48 @@ export default function BillingScreen() {
       return;
     }
 
-    const bill = await createBillApi({
+    const billData = {
       items: billItems,
       totalAmount: grandTotal,
       paymentMode,
       billerId: user!.id,
       billerName: user!.name,
-    });
+    };
 
-    toast({
-      title: "Bill Created Successfully",
-      description: `Bill #${bill.billNumber} - ₹${grandTotal.toFixed(2)}`,
-      className: "bg-gradient-to-r from-green-600 to-emerald-600 text-white border-none"
-    });
+    try {
+      const bill = await createBillApi(billData);
 
-    setBillItems([]);
-    setLastBill(bill);
+      toast({
+        title: "Bill Created Successfully",
+        description: `Bill #${bill.billNumber} - ₹${grandTotal.toFixed(2)}`,
+        className: "bg-gradient-to-r from-green-600 to-emerald-600 text-white border-none"
+      });
 
-    // Use browser/system print dialog (works on Android via Capacitor too)
-    setTimeout(() => {
-      window.print();
-    }, 100);
+      setBillItems([]);
+      setLastBill(bill);
+
+      // Use browser/system print dialog
+      setTimeout(() => {
+        window.print();
+      }, 100);
+    } catch (error) {
+      console.log('Network creation failed, queueing offline:', error);
+      const offlineBill = addToQueue(billData);
+      
+      // Still allow "printing" (though it won't have a server bill number yet)
+      const mockBill = {
+        ...billData,
+        billNumber: 'OFF-' + (offlineBill as any).localId.split('-')[1],
+        createdAt: new Date().toISOString(),
+      } as any;
+      
+      setBillItems([]);
+      setLastBill(mockBill);
+      
+      setTimeout(() => {
+        window.print();
+      }, 100);
+    }
   };
 
   const getItemCount = (itemId: string) => billItems.find(bi => bi.itemId === itemId)?.quantity || 0;
@@ -119,6 +144,29 @@ export default function BillingScreen() {
 
   return (
     <>
+      {/* Network Status Bar */}
+      <div className={cn(
+        "h-8 flex items-center justify-between px-4 text-[10px] font-black uppercase tracking-[0.2em] transition-colors print:hidden",
+        isOnline 
+          ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" 
+          : "bg-red-500/10 text-red-600 dark:text-red-400"
+      )}>
+        <div className="flex items-center gap-2">
+          {isOnline ? <Wifi className="h-3 w-3" /> : <WifiOff className="h-3 w-3" />}
+          {isOnline ? "Connected & Online" : "Working Offline Mode"}
+        </div>
+        
+        {pendingCount > 0 && (
+          <button 
+            onClick={() => syncQueue()}
+            disabled={!isOnline}
+            className="flex items-center gap-2 hover:opacity-80 disabled:opacity-50"
+          >
+            <RefreshCcw className={cn("h-3 w-3", !isOnline ? "" : "animate-spin-slow")} />
+            {pendingCount} Bills Pending Sync
+          </button>
+        )}
+      </div>
       <div className="flex flex-col lg:flex-row flex-1 bg-[#F7F7F9] dark:bg-[#0B0C10] print:hidden overflow-hidden">
         {/* Left Section: Menu */}
         <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-[#1C1D21] shadow-sm z-10 transition-colors">
