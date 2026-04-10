@@ -30,9 +30,10 @@ const getAuthToken = (): string | null => {
 // Helper function for API calls with authentication
 const apiCall = async <T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit & { timeoutMs?: number } = {}
 ): Promise<T> => {
   const token = getAuthToken();
+  const { timeoutMs = 15000, ...fetchOptions } = options;
 
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
@@ -51,17 +52,32 @@ const apiCall = async <T>(
     url.searchParams.append('_t', Date.now().toString());
   }
 
-  const response = await fetch(url.toString(), {
-    ...options,
-    headers,
-  });
+  // Setup timeout abort controller
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Request failed' }));
-    throw new Error(error.error || `HTTP ${response.status}`);
+  try {
+    const response = await fetch(url.toString(), {
+      ...fetchOptions,
+      headers,
+      signal: controller.signal,
+    });
+    
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: 'Request failed' }));
+      throw new Error(error.error || `HTTP ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error: any) {
+    clearTimeout(timeoutId);
+    if (error.name === 'AbortError') {
+      throw new Error('Network request timed out');
+    }
+    throw error;
   }
-
-  return response.json();
 };
 
 // ============ AUTH API ============
@@ -219,6 +235,7 @@ export const createBillApi = async (billData: any): Promise<Bill> => {
   return apiCall<Bill>('/bills', {
     method: 'POST',
     body: JSON.stringify(billData),
+    timeoutMs: 5000, // Short timeout (5s) for billing to fallback quickly to offline queue
   });
 };
 
