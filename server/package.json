@@ -5,7 +5,8 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
-    "build": "tsc",
+    "clean": "rimraf dist",
+    "build": "npm run clean && tsc",
     "start": "node dist/server.js",
     "seed": "ts-node src/database/seed.ts",
     "test:db": "ts-node src/config/testConnection.ts",
@@ -46,6 +47,7 @@
     "@types/pdfkit": "^0.13.4",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "rimraf": "^5.0.5"
   }
 }
